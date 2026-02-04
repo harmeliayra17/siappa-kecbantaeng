@@ -32,10 +32,13 @@ export default function AgendaForm() {
 
   useEffect(() => {
     fetchKategoris();
-    if (isEditMode) {
+  }, []);
+
+  useEffect(() => {
+    if (isEditMode && id) {
       fetchAgendaData();
     }
-  }, []);
+  }, [id, isEditMode]);
 
   const fetchAgendaData = async () => {
     try {

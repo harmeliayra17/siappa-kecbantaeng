@@ -12,6 +12,16 @@ export default function AkunSatgas() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editRole, setEditRole] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [newAccount, setNewAccount] = useState({
+    nama_lengkap: '',
+    email: '',
+    password: '',
+    role: 'satgas',
+    desa_tugas: '',
+  });
 
   useEffect(() => {
     if (!isSuperAdmin()) {
@@ -78,6 +88,62 @@ export default function AkunSatgas() {
     }
   };
 
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    setCreateError('');
+    
+    // Validate
+    if (!newAccount.nama_lengkap.trim()) {
+      setCreateError('Nama lengkap wajib diisi');
+      return;
+    }
+    if (!newAccount.email.trim()) {
+      setCreateError('Email wajib diisi');
+      return;
+    }
+    if (!newAccount.password.trim()) {
+      setCreateError('Password wajib diisi');
+      return;
+    }
+    if (newAccount.role === 'satgas' && !newAccount.desa_tugas.trim()) {
+      setCreateError('Desa tugas wajib diisi untuk role Satgas');
+      return;
+    }
+
+    try {
+      setCreateLoading(true);
+      // In real implementation, this should call an API endpoint that:
+      // 1. Creates a user in Supabase Auth
+      // 2. Creates a profile in the profiles table
+      
+      // For now, we'll add it to the local state
+      const newId = Math.max(...accounts.map(a => a.id), 0) + 1;
+      const newAcc = {
+        id: newId,
+        nama_lengkap: newAccount.nama_lengkap,
+        email: newAccount.email,
+        role: newAccount.role,
+        desa_tugas: newAccount.role === 'satgas' ? newAccount.desa_tugas : '-',
+      };
+      
+      setAccounts([...accounts, newAcc]);
+      setShowCreateModal(false);
+      setNewAccount({
+        nama_lengkap: '',
+        email: '',
+        password: '',
+        role: 'satgas',
+        desa_tugas: '',
+      });
+      alert('Akun berhasil ditambahkan');
+    } catch (err) {
+      console.error('Error creating account:', err);
+      setCreateError(err.message || 'Gagal membuat akun');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -94,7 +160,9 @@ export default function AkunSatgas() {
           <h1 className="text-3xl font-bold text-gray-900">Kelola Akun</h1>
           <p className="text-gray-600 mt-1">Manage admin and satgas accounts</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold">
           <Plus size={20} />
           Tambah Akun
         </button>
@@ -205,6 +273,100 @@ export default function AkunSatgas() {
               >
                 Hapus
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Account Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Tambah Akun Baru</h2>
+              
+              {createError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {createError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateAccount} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Lengkap</label>
+                  <input
+                    type="text"
+                    value={newAccount.nama_lengkap}
+                    onChange={(e) => setNewAccount({...newAccount, nama_lengkap: e.target.value})}
+                    placeholder="Masukkan nama lengkap"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={newAccount.email}
+                    onChange={(e) => setNewAccount({...newAccount, email: e.target.value})}
+                    placeholder="Masukkan email"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    value={newAccount.password}
+                    onChange={(e) => setNewAccount({...newAccount, password: e.target.value})}
+                    placeholder="Masukkan password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Role</label>
+                  <select
+                    value={newAccount.role}
+                    onChange={(e) => setNewAccount({...newAccount, role: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="kecamatan">Kecamatan (Admin)</option>
+                    <option value="satgas">Satgas (Local Admin)</option>
+                  </select>
+                </div>
+
+                {newAccount.role === 'satgas' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Desa Tugas</label>
+                    <input
+                      type="text"
+                      value={newAccount.desa_tugas}
+                      onChange={(e) => setNewAccount({...newAccount, desa_tugas: e.target.value})}
+                      placeholder="Masukkan nama desa"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-semibold"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createLoading}
+                    className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold disabled:opacity-50"
+                  >
+                    {createLoading ? 'Loading...' : 'Simpan'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

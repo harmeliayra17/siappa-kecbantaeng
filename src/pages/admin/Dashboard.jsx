@@ -67,13 +67,13 @@ export default function AdminDashboard() {
   }, [profile, isSuperAdmin, isSatgas]);
 
   const StatCard = ({ icon: Icon, label, value, color }) => (
-    <div className="card-clean p-6 hover-lift">
-      <div className="flex items-center justify-between">
+    <div className="card-clean p-6 hover-lift h-full">
+      <div className="flex items-center justify-between h-full">
         <div>
           <p className="text-body text-sm font-medium">{label}</p>
           <p className="text-2xl font-bold text-heading mt-2">{value}</p>
         </div>
-        <div className={`p-3 rounded-lg ${color}`}>
+        <div className={`p-3 rounded-lg flex-shrink-0 ${color}`}>
           <Icon size={24} className="text-white" />
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-2">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 pt-16 md:pt-0">
         <h1 className="text-4xl font-bold text-heading mb-2">Dashboard</h1>
         <p className="text-lg text-body">
           Selamat datang, <strong>{profile?.nama_lengkap}</strong>

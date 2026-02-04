@@ -24,10 +24,13 @@ export default function EdukasiForm() {
 
   useEffect(() => {
     fetchKategoris();
-    if (isEditMode) {
+  }, []);
+
+  useEffect(() => {
+    if (isEditMode && id) {
       fetchEdukasiData();
     }
-  }, []);
+  }, [id, isEditMode]);
 
   const fetchEdukasiData = async () => {
     try {

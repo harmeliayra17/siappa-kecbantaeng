@@ -40,7 +40,6 @@ export default function AdminSidebar() {
       submenu: [
         { label: 'Agenda Kegiatan', path: '/admin/cms/agenda' },
         { label: 'Edukasi', path: '/admin/cms/edukasi' },
-        { label: 'Website Publik', path: '/admin/cms/website', showFor: 'kecamatan' }, // Hanya Kecamatan
       ],
     },
     {

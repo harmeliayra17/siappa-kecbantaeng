@@ -15,7 +15,7 @@ export default function DetailEdukasi() {
         setLoading(true);
         const { data, error } = await supabase
           .from('konten_edukasi')
-          .select('id, judul_artikel, isi_konten, kategori, penulis, tanggal_publikasi, gambar_thumbnail, created_at')
+          .select('*')
           .eq('id', id)
           .single();
 
@@ -77,7 +77,16 @@ export default function DetailEdukasi() {
     );
   }
 
-  const categories = article.kategori?.split(',').map(cat => cat.trim()) || [article.kategori];
+  // Support both field names
+  const title = article.judul_konten || article.judul_artikel;
+  const content = article.isi_konten || article.konten || '';
+  const image = article.featured_image_url || article.gambar_thumbnail;
+  const date = article.tanggal_publikasi || article.created_at;
+  const author = article.penulis || 'Admin SI-APPA';
+
+  // Handle category display - support both field names
+  const categoryName = article.kategori || article.kategori_id || '';
+  const categories = typeof categoryName === 'string' ? categoryName.split(',').map(cat => cat.trim()) : [categoryName];
 
   return (
     <div className="min-h-screen pt-36 pb-20 px-6 md:px-8 font-sans bg-white">
@@ -98,28 +107,28 @@ export default function DetailEdukasi() {
             {/* Category Badge */}
             <div className="mb-6">
               <span className="inline-block bg-primary/10 text-primary px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider">
-                {article.kategori}
+                {categoryName}
               </span>
             </div>
 
             {/* Title */}
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-              {article.judul_artikel}
+              {title}
             </h1>
 
             {/* Meta Information */}
             <div className="flex flex-wrap items-center gap-4 text-gray-500 text-sm pb-8 border-b border-gray-200 mb-12">
-              <span>{formatDate(article.created_at)}</span>
+              <span>{formatDate(date)}</span>
               <span>•</span>
-              <span>oleh Admin SI-APPA</span>
+              <span>oleh {author}</span>
             </div>
 
             {/* Featured Image */}
-            {article.gambar_thumbnail && (
+            {image && (
               <div className="w-full h-96 overflow-hidden rounded-lg mb-8">
                 <img 
-                  src={article.gambar_thumbnail} 
-                  alt={article.judul_artikel}
+                  src={image} 
+                  alt={title}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -127,7 +136,7 @@ export default function DetailEdukasi() {
 
             {/* Article Body */}
             <div className="text-gray-700 text-base leading-relaxed whitespace-pre-wrap mb-12">
-              {article.isi_konten}
+              {content}
             </div>
 
             {/* Share Buttons */}

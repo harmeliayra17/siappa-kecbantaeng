@@ -39,8 +39,9 @@ export default function Edukasi() {
 
   // Filter articles
   const filteredArticles = articles.filter(article => {
-    const matchSearch = article.judul_artikel.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchCategory = !selectedCategory || article.kategori === selectedCategory;
+    const judul = (article.judul_konten || article.judul_artikel || '').toLowerCase();
+    const matchSearch = judul.includes(searchQuery.toLowerCase());
+    const matchCategory = !selectedCategory || (article.kategori_id === selectedCategory || article.kategori === selectedCategory);
     return matchSearch && matchCategory;
   });
 
@@ -146,10 +147,10 @@ export default function Edukasi() {
                 className="group relative h-96 rounded-2xl overflow-hidden cursor-pointer"
               >
                 {/* Background Image dengan Overlay */}
-                {article.gambar_thumbnail && (
+                {(article.featured_image_url || article.gambar_thumbnail) && (
                   <img
-                    src={article.gambar_thumbnail}
-                    alt={article.judul_artikel}
+                    src={article.featured_image_url || article.gambar_thumbnail}
+                    alt={article.judul_konten || article.judul_artikel}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 )}
@@ -164,12 +165,12 @@ export default function Edukasi() {
                 <div className="relative h-full flex flex-col justify-between p-6 text-white">
                   {/* Top Section */}
                   <div className="space-y-3">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${getCategoryColor(article.kategori)}`}>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${getCategoryColor(article.kategori || article.kategori_id)}`}>
                       <Tag className="w-3 h-3 inline mr-1" />
-                      {article.kategori}
+                      {article.kategori || article.kategori_id}
                     </span>
                     <h3 className="font-bold text-xl line-clamp-2 group-hover:text-primary transition-colors duration-300">
-                      {article.judul_artikel}
+                      {article.judul_konten || article.judul_artikel}
                     </h3>
                   </div>
 
@@ -177,7 +178,7 @@ export default function Edukasi() {
                   <div className="space-y-3">
                     <div className="h-16 relative overflow-hidden">
                       <p className="text-sm text-gray-200 line-clamp-3 group-hover:text-white transition-colors duration-300 absolute top-0 group-hover:top-0 group-hover:animate-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        {truncateText(article.isi_konten, 150)}
+                        {truncateText(article.isi_konten || '', 150)}
                       </p>
                     </div>
 
@@ -206,7 +207,7 @@ export default function Edukasi() {
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-gradient-to-r from-primary to-secondary text-white p-6 flex justify-between items-center">
-              <h2 className="text-2xl font-bold flex-1">{selectedArticle.judul_artikel}</h2>
+              <h2 className="text-2xl font-bold flex-1">{selectedArticle.judul_konten || selectedArticle.judul_artikel}</h2>
               <button
                 onClick={() => setSelectedArticle(null)}
                 className="p-2 hover:bg-white/20 rounded-lg transition"
@@ -218,18 +219,18 @@ export default function Edukasi() {
             {/* Modal Content */}
             <div className="p-6 space-y-4">
               {/* Thumbnail */}
-              {selectedArticle.gambar_thumbnail && (
+              {(selectedArticle.featured_image_url || selectedArticle.gambar_thumbnail) && (
                 <img
-                  src={selectedArticle.gambar_thumbnail}
-                  alt={selectedArticle.judul_artikel}
+                  src={selectedArticle.featured_image_url || selectedArticle.gambar_thumbnail}
+                  alt={selectedArticle.judul_konten || selectedArticle.judul_artikel}
                   className="w-full h-80 object-cover rounded-lg"
                 />
               )}
 
               {/* Category & Date */}
               <div className="flex items-center gap-4 pb-4 border-b">
-                <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getCategoryColor(selectedArticle.kategori)}`}>
-                  {selectedArticle.kategori}
+                <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getCategoryColor(selectedArticle.kategori || selectedArticle.kategori_id)}`}>
+                  {selectedArticle.kategori || selectedArticle.kategori_id}
                 </span>
                 <span className="text-sm text-gray-600">
                   <Calendar className="w-4 h-4 inline mr-2" />

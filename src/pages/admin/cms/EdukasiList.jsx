@@ -114,9 +114,9 @@ export default function EdukasiList() {
               <tbody className="divide-y divide-gray-200">
                 {filteredEdukasi.map(e => (
                   <tr key={e.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-semibold text-gray-900">{e.judul_konten}</td>
+                    <td className="px-6 py-4 font-semibold text-gray-900">{e.judul_konten || e.judul_artikel}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{e.penulis}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{e.kategori?.nama_kategori}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{e.kategori?.nama_kategori || e.kategori || e.kategori_id}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {new Date(e.created_at).toLocaleDateString('id-ID')}
                     </td>

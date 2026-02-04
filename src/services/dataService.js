@@ -407,8 +407,8 @@ export const settingsService = {
     try {
       const { data, error } = await supabase
         .from('pengaturan_web')
-        .select('home_hero_title, home_hero_subtitle, home_hero_cta_text, home_hero_image, home_stats_section_title, home_stats_section_subtitle, home_features_section_title, home_features_section_subtitle, home_process_section_title, home_process_section_subtitle')
-        .limit(1)
+        .select('home_hero_title, home_hero_subtitle, home_hero_cta_text, home_hero_image_1, home_hero_image_2, home_hero_image_3, home_stats_section_title, home_stats_section_subtitle, home_features_section_title, home_features_section_subtitle, home_process_section_title, home_process_section_subtitle')
+        .eq('id', 1)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;

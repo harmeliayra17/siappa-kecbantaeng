@@ -34,6 +34,22 @@ export default function ImageUpload({
       setLoading(true);
       setError('');
 
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Tipe file tidak didukung. Gunakan JPG, PNG, WebP, atau GIF');
+        setLoading(false);
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setError('Ukuran file terlalu besar. Maksimal 5MB');
+        setLoading(false);
+        return;
+      }
+
       // Determine upload function based on type
       let uploadFunc;
       if (uploadType === 'agenda') {
@@ -52,10 +68,12 @@ export default function ImageUpload({
         setError('');
       } else {
         setError(result.error || 'Gagal upload gambar');
+        setPreviewUrl('');
       }
     } catch (err) {
-      setError('Terjadi kesalahan saat upload');
+      setError('Terjadi kesalahan saat upload: ' + (err.message || 'Unknown error'));
       console.error('Upload error:', err);
+      setPreviewUrl('');
     } finally {
       setLoading(false);
       // Reset file input
@@ -128,13 +146,14 @@ export default function ImageUpload({
             onChange={handleFileSelect}
             disabled={loading}
             className="hidden"
+            multiple={false}
           />
 
           <Upload className={`mx-auto mb-2 ${loading ? 'text-gray-400' : 'text-primary'}`} size={24} />
           <p className={`text-sm font-medium ${loading ? 'text-gray-500' : 'text-gray-700'}`}>
-            {loading ? 'Uploading...' : 'Klik atau drag gambar ke sini'}
+            {loading ? 'Uploading...' : 'Tap/Klik untuk pilih gambar'}
           </p>
-          <p className="text-xs text-gray-500 mt-1">JPG, PNG, WebP (Max 5MB)</p>
+          <p className="text-xs text-gray-500 mt-1">JPG, PNG, WebP, GIF (Max 5MB)</p>
         </div>
       )}
 

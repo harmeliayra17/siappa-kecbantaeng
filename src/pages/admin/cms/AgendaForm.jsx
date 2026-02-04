@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { agendaService, masterService } from '../../../services/dataService';
 import ImageUpload from '../../../components/common/ImageUpload';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
 
 export default function AgendaForm() {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ export default function AgendaForm() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(!!id);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
   const [kategoris, setKategoris] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -107,11 +108,13 @@ export default function AgendaForm() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setSubmitError('Mohon isi semua field yang wajib');
       return;
     }
 
     try {
       setLoading(true);
+      setSubmitError('');
       let result;
       
       if (isEditMode) {
@@ -120,7 +123,7 @@ export default function AgendaForm() {
           alert('Kegiatan berhasil diperbarui');
           navigate('/admin/cms/agenda');
         } else {
-          alert('Gagal memperbarui kegiatan');
+          setSubmitError(result?.error || 'Gagal memperbarui kegiatan');
         }
       } else {
         result = await agendaService.createAgenda(formData);
@@ -128,12 +131,12 @@ export default function AgendaForm() {
           alert('Kegiatan berhasil ditambahkan');
           navigate('/admin/cms/agenda');
         } else {
-          alert('Gagal menambahkan kegiatan');
+          setSubmitError(result?.error || 'Gagal menambahkan kegiatan');
         }
       }
     } catch (err) {
       console.error('Error:', err);
-      alert('Terjadi kesalahan');
+      setSubmitError(err.message || 'Terjadi kesalahan saat menyimpan');
     } finally {
       setLoading(false);
     }
@@ -156,6 +159,13 @@ export default function AgendaForm() {
 
       <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Error Alert */}
+          {submitError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 text-red-700">
+              <AlertCircle size={20} />
+              <p>{submitError}</p>
+            </div>
+          )}
           {/* Judul */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">

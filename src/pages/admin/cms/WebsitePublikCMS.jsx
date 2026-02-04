@@ -8,16 +8,18 @@ export default function WebsitePublikCMS() {
 
   const pages = [
     {
-      id: 'home',
-      title: 'Halaman Beranda (Home)',
-      description: 'Kelola konten hero, statistik, proses pelaporan, dan fitur utama di halaman beranda',
-      icon: '🏠'
+      id: 'edukasi',
+      title: 'Konten Edukasi',
+      description: 'Kelola artikel edukasi dan tips kesehatan untuk pemberdayaan perempuan dan anak',
+      icon: '📚',
+      link: '/admin/cms/edukasi'
     },
     {
-      id: 'profil',
-      title: 'Halaman Profil',
-      description: 'Kelola visi, misi, informasi kontak, dan media sosial di halaman profil',
-      icon: '👥'
+      id: 'kegiatan',
+      title: 'Agenda Kegiatan',
+      description: 'Kelola acara, workshop, dan kegiatan sosialisasi yang diselenggarakan',
+      icon: '📅',
+      link: '/admin/cms/agenda'
     },
   ];
 
@@ -34,7 +36,7 @@ export default function WebsitePublikCMS() {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold text-gray-900">Manajemen Konten Website Publik</h1>
-        <p className="text-gray-600 mt-2">Kelola semua konten halaman publik dari sini</p>
+        <p className="text-gray-600 mt-2">Kelola konten dinamis halaman publik dari sini</p>
       </div>
 
       {/* Pages Grid */}
@@ -45,7 +47,7 @@ export default function WebsitePublikCMS() {
             <h3 className="text-xl font-bold text-gray-900 mb-2">{page.title}</h3>
             <p className="text-gray-600 text-sm mb-6">{page.description}</p>
             <Link
-              to={page.id === 'home' ? '/admin/cms/home-content' : '/admin/cms/profil-content'}
+              to={page.link}
               className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold"
             >
               <Edit2 size={18} />
@@ -57,12 +59,12 @@ export default function WebsitePublikCMS() {
 
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-12">
-        <h3 className="font-bold text-blue-900 mb-2">💡 Tips</h3>
+        <h3 className="font-bold text-blue-900 mb-2">💡 Catatan</h3>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Perubahan konten akan langsung terlihat di halaman publik</li>
+          <li>• Konten Halaman Home dan Profil bersifat static (tidak perlu di-update berkala)</li>
+          <li>• Fokus pada pengelolaan Edukasi dan Agenda Kegiatan yang dinamis</li>
           <li>• Gunakan gambar dengan ukuran optimal untuk hasil terbaik</li>
-          <li>• Pastikan teks deskripsi jelas dan menarik bagi pengunjung</li>
-          <li>• Semua field dapat dikosongkan jika tidak diperlukan (kecuali yang wajib)</li>
+          <li>• Pastikan deskripsi jelas dan menarik bagi pengunjung website</li>
         </ul>
       </div>
     </div>

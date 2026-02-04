@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { edukasiService, masterService } from '../../../services/dataService';
 import ImageUpload from '../../../components/common/ImageUpload';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
 
 export default function EdukasiForm() {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ export default function EdukasiForm() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(!!id);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
   const [kategoris, setKategoris] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -91,11 +92,13 @@ export default function EdukasiForm() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setSubmitError('Mohon isi semua field yang wajib');
       return;
     }
 
     try {
       setLoading(true);
+      setSubmitError('');
       let result;
       
       if (isEditMode) {
@@ -107,7 +110,7 @@ export default function EdukasiForm() {
           alert('Konten edukasi berhasil diperbarui');
           navigate('/admin/cms/edukasi');
         } else {
-          alert('Gagal memperbarui konten edukasi');
+          setSubmitError(result?.error || 'Gagal memperbarui konten edukasi');
         }
       } else {
         result = await edukasiService.createEdukasi({
@@ -118,12 +121,12 @@ export default function EdukasiForm() {
           alert('Konten edukasi berhasil ditambahkan');
           navigate('/admin/cms/edukasi');
         } else {
-          alert('Gagal menambahkan konten edukasi');
+          setSubmitError(result?.error || 'Gagal menambahkan konten edukasi');
         }
       }
     } catch (err) {
       console.error('Error:', err);
-      alert('Terjadi kesalahan');
+      setSubmitError(err.message || 'Terjadi kesalahan saat menyimpan');
     } finally {
       setLoading(false);
     }
@@ -146,6 +149,13 @@ export default function EdukasiForm() {
 
       <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Error Alert */}
+          {submitError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 text-red-700">
+              <AlertCircle size={20} />
+              <p>{submitError}</p>
+            </div>
+          )}
           {/* Featured Image */}
           <ImageUpload
             value={formData.featured_image_url}
@@ -215,19 +225,6 @@ export default function EdukasiForm() {
               ))}
             </select>
             {errors.kategori_id && <p className="text-red-600 text-sm mt-1">{errors.kategori_id}</p>}
-          </div>
-
-          {/* Featured Image URL */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Featured Image URL</label>
-            <input
-              type="url"
-              name="featured_image_url"
-              value={formData.featured_image_url}
-              onChange={handleInputChange}
-              placeholder="https://example.com/image.jpg"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
           </div>
 
           {/* Isi Konten */}

@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, Mail, MapPin, Users, Search, Building2 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
-import { settingsService } from '../../services/dataService';
+
+// Static content - no CMS
+const PROFIL_CONTENT = {
+  title: 'Tentang SI-APPA',
+  about: 'Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.',
+  vision: 'Menciptakan ekosistem pelaporan yang aman, transparan, dan responsif untuk pemberdayaan perempuan dan anak',
+  mission: 'Melayani dengan hati, melindungi yang terpinggirkan melalui sistem informasi yang dapat diakses oleh semua',
+  contact: {
+    email: 'pengaduan@siappa.bantaeng.go.id',
+    phone: '+62 812-3456-7890',
+    address: 'Kantor Camat Bantaeng, Jl. Pendidikan No. 1, Kabupaten Bantaeng'
+  }
+};
 
 export default function Profil() {
   const [satgas, setSatgas] = useState([]);
@@ -9,42 +21,6 @@ export default function Profil() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDesa, setSelectedDesa] = useState('');
   const [desas, setDesas] = useState([]);
-  const [profilSettings, setProfilSettings] = useState({
-    profil_title: 'Profil Satgas & Kontak',
-    profil_vision: '',
-    profil_mission: '',
-    profil_about_text: 'Tim Perlindungan Perempuan dan Anak di setiap desa',
-    profil_about_image: null,
-    contact_email: 'pengaduan@siappa.bantaeng.go.id',
-    contact_phone: '+62 812-3456-7890',
-    contact_address: 'Kecamatan Bantaeng',
-    social_media_instagram: '',
-    social_media_facebook: ''
-  });
-
-  // Fetch profil settings
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchProfilSettings = async () => {
-      try {
-        const result = await settingsService.getProfilSettings();
-        if (isMounted && result.success && result.data) {
-          setProfilSettings(prev => ({
-            ...prev,
-            ...result.data
-          }));
-        }
-      } catch (err) {
-        console.error('Error fetching profil settings:', err);
-      }
-    };
-
-    fetchProfilSettings();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Fetch satgas data
   useEffect(() => {
@@ -97,8 +73,8 @@ export default function Profil() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-heading mb-3">{profilSettings.profil_title || 'Profil Satgas & Kontak'}</h1>
-          <p className="text-lg text-body">{profilSettings.profil_about_text || 'Tim Perlindungan Perempuan dan Anak di setiap desa'}</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-heading mb-3">{PROFIL_CONTENT.title}</h1>
+          <p className="text-lg text-body">{PROFIL_CONTENT.about}</p>
         </div>
 
         {/* Search & Filter */}
@@ -227,21 +203,21 @@ export default function Profil() {
             <div>
               <p className="text-white/90 mb-2">Hubungi Layanan Pengaduan 24/7:</p>
               <a
-                href={`https://wa.me/${profilSettings.contact_phone?.replace(/[^\d]/g, '') || '6281234567890'}`}
+                href={`https://wa.me/${PROFIL_CONTENT.contact.phone.replace(/[^\d]/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-3xl font-bold text-white hover:underline"
               >
-                {profilSettings.contact_phone || '+62 812-3456-7890'}
+                {PROFIL_CONTENT.contact.phone}
               </a>
             </div>
             <div>
               <p className="text-white/90 mb-2">Email Pengaduan:</p>
               <a
-                href={`mailto:${profilSettings.contact_email || 'pengaduan@siappa.bantaeng.go.id'}`}
+                href={`mailto:${PROFIL_CONTENT.contact.email}`}
                 className="text-lg font-bold text-white hover:underline"
               >
-                {profilSettings.contact_email || 'pengaduan@siappa.bantaeng.go.id'}
+                {PROFIL_CONTENT.contact.email}
               </a>
             </div>
           </div>

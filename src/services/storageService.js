@@ -29,6 +29,8 @@ export const storageService = {
       const filename = `${timestamp}-${random}-${file.name}`;
       const filepath = folder ? `${folder}/${filename}` : filename;
 
+      console.log('Uploading file:', { filename, folder, size: file.size, type: file.type });
+
       // Upload file
       const { data, error } = await supabase.storage
         .from(bucketName)
@@ -37,16 +39,27 @@ export const storageService = {
           upsert: false,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase upload error:', error);
+        throw new Error(error.message || 'Gagal upload ke server');
+      }
+
+      console.log('Upload successful, getting public URL...');
 
       // Get public URL
       const { data: publicData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filepath);
 
+      if (!publicData?.publicUrl) {
+        throw new Error('Gagal mendapatkan URL publik');
+      }
+
+      console.log('Upload complete:', publicData.publicUrl);
+
       return {
         success: true,
-        url: publicData?.publicUrl,
+        url: publicData.publicUrl,
         path: filepath,
         filename: filename,
       };
@@ -54,7 +67,7 @@ export const storageService = {
       console.error('Error uploading image:', err);
       return {
         success: false,
-        error: err.message,
+        error: err.message || 'Gagal upload gambar',
       };
     }
   },

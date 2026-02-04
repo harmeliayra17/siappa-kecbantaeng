@@ -2,7 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, MapPin, FileText, Hash, ArrowRight, Users, Shield, Zap, Heart } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
-import { settingsService } from '../../services/dataService';
+
+// Static content - no CMS
+const HOME_CONTENT = {
+  hero: {
+    title: 'Selamat Datang di SI-APPA',
+    subtitle: 'Anda Tidak Sendiri, Kami Siap Melindungi',
+    ctaText: 'Laporkan Sekarang',
+    description: 'Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.'
+  },
+  stats: {
+    title: 'Statistik Transparansi',
+    subtitle: 'Komitmen kami dalam melayani'
+  },
+  process: {
+    title: 'Bagaimana Cara Melaporkan?',
+    subtitle: 'Proses pelaporan yang mudah, aman, dan transparan'
+  },
+  features: {
+    title: 'Mengapa Memilih SI-APPA?',
+    subtitle: 'Kami berkomitmen melayani Anda dengan profesional dan terpercaya'
+  }
+};
 
 export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -14,50 +35,13 @@ export default function Home() {
     desaTerlayani: 0,
     rataRataWaktu: '0'
   });
-  const [homeSettings, setHomeSettings] = useState({
-    home_hero_title: 'Selamat Datang di SI-APPA',
-    home_hero_subtitle: 'Sistem Informasi Aplikasi Pengaduan dan Asistensi',
-    home_hero_cta_text: 'Laporkan Sekarang',
-    home_hero_image_1: null,
-    home_hero_image_2: null,
-    home_hero_image_3: null,
-    home_stats_section_title: 'Statistik Transparansi',
-    home_stats_section_subtitle: 'Komitmen kami dalam melayani',
-    home_features_section_title: 'Bagaimana Cara Melaporkan?',
-    home_features_section_subtitle: 'Proses pelaporan yang mudah, aman, dan transparan',
-    home_process_section_title: 'Mengapa Memilih SI-APPA?',
-    home_process_section_subtitle: 'Kami berkomitmen melayani Anda dengan profesional dan terpercaya'
-  });
   const [loading, setLoading] = useState(true);
   
   const heroImages = [
     '/observasi-lembang-lembang.jpeg',
-    'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=500&fit=crop',
-    'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&h=500&fit=crop'
+    '/sosialisasi-sd2lembangcina.jpeg',
+    '/semproker.jpeg'
   ];
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchHomeSettings = async () => {
-      try {
-        const result = await settingsService.getHomeSettings();
-        if (isMounted && result.success && result.data) {
-          setHomeSettings(prev => ({
-            ...prev,
-            ...result.data
-          }));
-        }
-      } catch (err) {
-        console.error('Error fetching home settings:', err);
-      }
-    };
-
-    fetchHomeSettings();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -176,17 +160,16 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center relative z-10">
           <div className="text-center md:text-left animate-fade-in-up mt-8">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-heading mb-6 leading-tight">
-              {homeSettings.home_hero_title || 'Anda Tidak Sendiri,'}<br />
-              <span className="gradient-text">{homeSettings.home_hero_subtitle || 'Kami Siap Melindungi.'}</span>
+              {HOME_CONTENT.hero.title}<br />
+              <span className="gradient-text text-2xl md:text-3xl lg:text-4xl text-heading mb-0 leading-tight">{HOME_CONTENT.hero.subtitle}</span>
             </h1>
             <p className="text-lg md:text-xl text-body mb-8 leading-relaxed max-w-lg">
-              Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng 
-              hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.
+              {HOME_CONTENT.hero.description}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link to="/lapor">
                 <button className="btn-primary px-8 py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2 w-full sm:w-auto">
-                   <FileText className="w-5 h-5"/> {homeSettings.home_hero_cta_text || 'Lapor Sekarang'}
+                   <FileText className="w-5 h-5"/> {HOME_CONTENT.hero.ctaText}
                 </button>
               </Link>
               <Link to="/agenda">
@@ -199,74 +182,35 @@ export default function Home() {
 
           <div className="hidden md:block">
             <div className="relative w-full h-[450px] mt-8 rounded-2xl overflow-hidden shadow-2xl">
-              {/* Use database images for carousel if available, fallback to static carousel */}
-              {homeSettings.home_hero_image_1 || homeSettings.home_hero_image_2 || homeSettings.home_hero_image_3 ? (
-                <>
-                  {[homeSettings.home_hero_image_1, homeSettings.home_hero_image_2, homeSettings.home_hero_image_3]
-                    .filter(img => img)
-                    .map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`Hero ${idx + 1}`}
-                        className={`absolute w-full h-full object-cover transition-opacity duration-1000 ${
-                          idx === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                        }`}
-                      />
-                    ))}
-                  
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                  
-                  {/* Carousel Indicators */}
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
-                    {[homeSettings.home_hero_image_1, homeSettings.home_hero_image_2, homeSettings.home_hero_image_3]
-                      .filter(img => img)
-                      .map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentImageIndex(idx)}
-                          className={`w-3 h-3 rounded-full transition-all ${
-                            idx === currentImageIndex 
-                              ? 'bg-white w-8' 
-                              : 'bg-white/50 hover:bg-white/75'
-                          }`}
-                        />
-                      ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  {heroImages.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      alt={`Carousel ${idx + 1}`}
-                      className={`absolute w-full h-full object-cover transition-opacity duration-1000 ${
-                        idx === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                      }`}
-                    />
-                  ))}
-                  
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                  
-                  {/* Carousel Indicators */}
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
-                    {heroImages.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentImageIndex(idx)}
-                        className={`w-3 h-3 rounded-full transition-all ${
-                          idx === currentImageIndex 
-                            ? 'bg-white w-8' 
-                            : 'bg-white/50 hover:bg-white/75'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
+              {/* Static carousel - no database images */}
+              {heroImages.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`Carousel ${idx + 1}`}
+                  className={`absolute w-full h-full object-cover transition-opacity duration-1000 ${
+                    idx === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              ))}
+              
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              
+              {/* Carousel Indicators */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+                {heroImages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`w-3 h-3 rounded-full transition-all ${
+                      idx === currentImageIndex 
+                        ? 'bg-white w-8' 
+                        : 'bg-white/50 hover:bg-white/75'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
@@ -275,8 +219,8 @@ export default function Home() {
 
       <section className="py-24 px-0 relative">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center text-heading mb-4">{homeSettings.home_stats_section_title || 'Statistik Transparansi'}</h2>
-          <p className="text-center text-body text-lg md:text-xl mb-12">{homeSettings.home_stats_section_subtitle || 'Komitmen kami dalam melayani'}</p>
+          <h2 className="text-4xl font-bold text-center text-heading mb-4">{HOME_CONTENT.stats.title}</h2>
+          <p className="text-center text-body text-lg md:text-xl mb-12">{HOME_CONTENT.stats.subtitle}</p>
           <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-6">
             {/* Kartu 1 - Total Laporan */}
             <div className="card-clean hover-lift p-8 text-center relative">
@@ -342,8 +286,8 @@ export default function Home() {
         
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-heading mb-3">{homeSettings.home_features_section_title || 'Bagaimana Cara Melaporkan?'}</h2>
-            <p className="text-body text-lg md:text-xl">{homeSettings.home_features_section_subtitle || 'Proses pelaporan yang mudah, aman, dan transparan'}</p>
+            <h2 className="text-4xl font-bold text-heading mb-3">{HOME_CONTENT.process.title}</h2>
+            <p className="text-body text-lg md:text-xl">{HOME_CONTENT.process.subtitle}</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
@@ -375,8 +319,8 @@ export default function Home() {
         
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-heading mb-3">{homeSettings.home_process_section_title || 'Mengapa Memilih SI-APPA?'}</h2>
-            <p className="text-body text-lg md:text-xl">{homeSettings.home_process_section_subtitle || 'Kami berkomitmen melayani Anda dengan profesional dan terpercaya'}</p>
+            <h2 className="text-4xl font-bold text-heading mb-3">{HOME_CONTENT.features.title}</h2>
+            <p className="text-body text-lg md:text-xl">{HOME_CONTENT.features.subtitle}</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">

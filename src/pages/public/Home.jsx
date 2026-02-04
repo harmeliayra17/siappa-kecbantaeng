@@ -158,7 +158,7 @@ export default function Home() {
           <div className="text-center md:text-left animate-fade-in-up mt-8">
             {/* JUDUL DINAMIS */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-heading mb-6 leading-tight">
-              Selamat Datang di <br/>
+              <br/>
               <span className="text-primary">{webSettings.teks_sapaan}</span>
             </h1>
             {/* SUBJUDUL DINAMIS */}
@@ -169,15 +169,6 @@ export default function Home() {
             <p className="text-lg md:text-xl text-body mb-8 leading-relaxed max-w-lg">
               Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.
             </p>
-            
-            {/* Info Kontak Cepat (Optional jika ada di DB) */}
-            <div className="flex flex-wrap gap-4 mb-8 text-sm text-gray-600 justify-center md:justify-start">
-               {webSettings.contact_phone && (
-                 <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full border border-primary/20">
-                    <Phone size={16} className="text-primary"/> {webSettings.contact_phone}
-                 </div>
-               )}
-            </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link to="/lapor">

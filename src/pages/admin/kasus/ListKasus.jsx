@@ -50,9 +50,9 @@ export default function ListKasus() {
       );
     }
 
-    if (statusFilter) {
-      filtered = filtered.filter(k => k.status === statusFilter);
-    }
+  if (statusFilter) {
+    filtered = filtered.filter(k => k.status_kasus === statusFilter);
+  }
 
     setFilteredKasus(filtered);
   }, [searchTerm, statusFilter, kasus]);
@@ -168,8 +168,8 @@ export default function ListKasus() {
                     <td className="px-6 py-4 text-body">{k.nama_korban}</td>
                     <td className="px-6 py-4 text-sm text-body">{k.kategori?.nama_kategori}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(k.status)}`}>
-                        {k.status}
+                      <span className={`... ${getStatusColor(k.status_kasus)}`}>
+                        {k.status_kasus}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-body">

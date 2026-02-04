@@ -1,32 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, MapPin, FileText, Hash, ArrowRight, Users, Shield, Zap, Heart } from 'lucide-react';
+import { CheckCircle, MapPin, FileText, Hash, ArrowRight, Users, Shield, Zap, Heart, Phone, Clock } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
-
-// Static content - no CMS
-const HOME_CONTENT = {
-  hero: {
-    title: 'Selamat Datang di SI-APPA',
-    subtitle: 'Anda Tidak Sendiri, Kami Siap Melindungi',
-    ctaText: 'Laporkan Sekarang',
-    description: 'Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.'
-  },
-  stats: {
-    title: 'Statistik Transparansi',
-    subtitle: 'Komitmen kami dalam melayani'
-  },
-  process: {
-    title: 'Bagaimana Cara Melaporkan?',
-    subtitle: 'Proses pelaporan yang mudah, aman, dan transparan'
-  },
-  features: {
-    title: 'Mengapa Memilih SI-APPA?',
-    subtitle: 'Kami berkomitmen melayani Anda dengan profesional dan terpercaya'
-  }
-};
+import { settingsService } from '../../services/dataService';
 
 export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // State Data Dinamis (Default Value biar gak error saat loading)
+  const [webSettings, setWebSettings] = useState({
+    teks_sapaan: 'Selamat Datang di SI-APPA',
+    home_hero_subtitle: 'Anda Tidak Sendiri, Kami Siap Melindungi',
+    deskripsi_singkat: 'Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.',
+    contact_phone: '',
+    jam_kerja: ''
+  });
+
   const [stats, setStats] = useState({
     totalLaporan: 0,
     laporanPerempuan: 0,
@@ -35,29 +24,52 @@ export default function Home() {
     desaTerlayani: 0,
     rataRataWaktu: '0'
   });
+  
   const [loading, setLoading] = useState(true);
   
-  const heroImages = [
+  // Gambar Default (Fallback)
+  const defaultImages = [
     '/observasi-lembang-lembang.jpeg',
     '/sosialisasi-sd2lembangcina.jpeg',
     '/semproker.jpeg'
   ];
 
+  const [heroImages, setHeroImages] = useState(defaultImages);
+
+  // Efek Carousel
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroImages]);
 
+  // Fetch Data dari Database
   useEffect(() => {
     let isMounted = true;
 
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Fetch hanya kolom yang diperlukan, jangan relasi
+        // 1. Ambil Pengaturan Web (Judul, Gambar, Kontak)
+        const settingsResult = await settingsService.getSettings();
+        if (isMounted && settingsResult.success && settingsResult.data) {
+          setWebSettings(prev => ({ ...prev, ...settingsResult.data }));
+
+          // Cek apakah ada gambar hero dari database
+          const dbImages = [
+            settingsResult.data.home_hero_image_1,
+            settingsResult.data.home_hero_image_2,
+            settingsResult.data.home_hero_image_3
+          ].filter(img => img); // Filter yang tidak kosong
+
+          if (dbImages.length > 0) {
+            setHeroImages(dbImages);
+          }
+        }
+
+        // 2. Ambil Statistik Laporan
         const { data: laporan, error } = await supabase
           .from('laporan_pengaduan')
           .select('status_kasus, created_at, tanggal_selesai, lokasi_kejadian, kategori_id')
@@ -65,13 +77,12 @@ export default function Home() {
           .limit(1000);
 
         if (error) throw error;
-        if (!isMounted) return; // Don't update state if unmounted
 
-        if (laporan && laporan.length > 0) {
+        if (isMounted && laporan && laporan.length > 0) {
           const total = laporan.length;
           const selesai = laporan.filter(l => l.status_kasus === 'Selesai').length;
           
-          // Desa Terlayani (distinct lokasi)
+          // Desa Terlayani (Distinct)
           const desaSet = new Set(laporan.map(l => l.lokasi_kejadian).filter(Boolean));
           const desa = desaSet.size;
 
@@ -82,16 +93,15 @@ export default function Home() {
           if (selesaiLaporan.length > 0) {
             const totalHari = selesaiLaporan.reduce((sum, l) => {
               const created = new Date(l.created_at);
-              const selesai = new Date(l.tanggal_selesai);
-              const hari = Math.ceil((selesai - created) / (1000 * 60 * 60 * 24));
+              const selesaiDate = new Date(l.tanggal_selesai);
+              const hari = Math.ceil((selesaiDate - created) / (1000 * 60 * 60 * 24));
               return sum + hari;
             }, 0);
             rataRata = Math.round(totalHari / selesaiLaporan.length).toString();
           }
 
-          // Fetch kategori terpisah dengan batch
+          // Kategori (Batch Fetch)
           const kategoriIds = [...new Set(laporan.map(l => l.kategori_id).filter(Boolean))];
-          
           let perempuan = 0;
           let anak = 0;
 
@@ -110,48 +120,35 @@ export default function Home() {
             }
           }
 
-          if (isMounted) {
-            setStats({
-              totalLaporan: total,
-              laporanPerempuan: perempuan,
-              laporanAnak: anak,
-              kasusSelesai: selesai,
-              desaTerlayani: desa,
-              rataRataWaktu: rataRata
-            });
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching stats:', err);
-        // Set default stats jika error
-        if (isMounted) {
           setStats({
-            totalLaporan: 0,
-            laporanPerempuan: 0,
-            laporanAnak: 0,
-            kasusSelesai: 0,
-            desaTerlayani: 0,
-            rataRataWaktu: '0'
+            totalLaporan: total,
+            laporanPerempuan: perempuan,
+            laporanAnak: anak,
+            kasusSelesai: selesai,
+            desaTerlayani: desa,
+            rataRataWaktu: rataRata
           });
         }
+      } catch (err) {
+        console.error('Error fetching home data:', err);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
 
-    fetchStats();
+    fetchData();
 
     return () => {
       isMounted = false;
     };
   }, []);
+
   return (
     <div className="min-h-screen font-sans text-gray-800 selection:bg-accent selection:text-white" style={{
       background: 'linear-gradient(135deg, #ede8f5 0%, #e8d5f2 20%, #f5f0fa 40%, #e8d5f2 60%, #ede8f5 80%, #e8d5f2 100%)'
     }}>
       
+      {/* HERO SECTION */}
       <section className="pt-32 pb-20 px-0 relative overflow-hidden">
         {/* Decorative Shapes */}
         <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-primary/5 blur-3xl"></div>
@@ -159,17 +156,33 @@ export default function Home() {
         
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center relative z-10">
           <div className="text-center md:text-left animate-fade-in-up mt-8">
+            {/* JUDUL DINAMIS */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-heading mb-6 leading-tight">
-              {HOME_CONTENT.hero.title}<br />
-              <span className="gradient-text text-2xl md:text-3xl lg:text-4xl text-heading mb-0 leading-tight">{HOME_CONTENT.hero.subtitle}</span>
+              Selamat Datang di <br/>
+              <span className="text-primary">{webSettings.teks_sapaan}</span>
             </h1>
-            <p className="text-lg md:text-xl text-body mb-8 leading-relaxed max-w-lg">
-              {HOME_CONTENT.hero.description}
+            {/* SUBJUDUL DINAMIS */}
+            <p className="gradient-text text-xl md:text-2xl font-semibold mb-6">
+               "{webSettings.home_hero_subtitle}"
             </p>
+            {/* DESKRIPSI (Hardcoded atau bisa diambil dari DB jika mau) */}
+            <p className="text-lg md:text-xl text-body mb-8 leading-relaxed max-w-lg">
+              Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.
+            </p>
+            
+            {/* Info Kontak Cepat (Optional jika ada di DB) */}
+            <div className="flex flex-wrap gap-4 mb-8 text-sm text-gray-600 justify-center md:justify-start">
+               {webSettings.contact_phone && (
+                 <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full border border-primary/20">
+                    <Phone size={16} className="text-primary"/> {webSettings.contact_phone}
+                 </div>
+               )}
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link to="/lapor">
                 <button className="btn-primary px-8 py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2 w-full sm:w-auto">
-                   <FileText className="w-5 h-5"/> {HOME_CONTENT.hero.ctaText}
+                   <FileText className="w-5 h-5"/> Laporkan Sekarang
                 </button>
               </Link>
               <Link to="/agenda">
@@ -181,8 +194,8 @@ export default function Home() {
           </div>
 
           <div className="hidden md:block">
-            <div className="relative w-full h-[450px] mt-8 rounded-2xl overflow-hidden shadow-2xl">
-              {/* Static carousel - no database images */}
+            <div className="relative w-full h-[450px] mt-8 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50">
+              {/* GAMBAR CAROUSEL DINAMIS */}
               {heroImages.map((img, idx) => (
                 <img
                   key={idx}
@@ -217,10 +230,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* STATISTIK SECTION */}
       <section className="py-24 px-0 relative">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center text-heading mb-4">{HOME_CONTENT.stats.title}</h2>
-          <p className="text-center text-body text-lg md:text-xl mb-12">{HOME_CONTENT.stats.subtitle}</p>
+          <h2 className="text-4xl font-bold text-center text-heading mb-4">Statistik Transparansi</h2>
+          <p className="text-center text-body text-lg md:text-xl mb-12">Komitmen kami dalam melayani masyarakat</p>
           <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-6">
             {/* Kartu 1 - Total Laporan */}
             <div className="card-clean hover-lift p-8 text-center relative">
@@ -279,15 +293,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* PROSES PELAPORAN */}
       <section className="py-24 px-0 relative">
-        {/* Decorative Elements */}
         <div className="absolute top-20 left-10 w-40 h-40 rounded-full bg-primary/5 blur-2xl"></div>
-        <div className="absolute bottom-20 right-5 w-32 h-32 rounded-full bg-secondary/5 blur-2xl"></div>
-        
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-heading mb-3">{HOME_CONTENT.process.title}</h2>
-            <p className="text-body text-lg md:text-xl">{HOME_CONTENT.process.subtitle}</p>
+            <h2 className="text-4xl font-bold text-heading mb-3">Bagaimana Cara Melaporkan?</h2>
+            <p className="text-body text-lg md:text-xl">Proses pelaporan yang mudah, aman, dan transparan</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
@@ -312,6 +324,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* FITUR UNGGULAN */}
       <section className="py-24 px-0 relative">
         {/* Decorative Elements */}
         <div className="absolute top-5 right-10 w-48 h-48 rounded-full bg-primary/5 blur-3xl"></div>
@@ -319,8 +332,8 @@ export default function Home() {
         
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-heading mb-3">{HOME_CONTENT.features.title}</h2>
-            <p className="text-body text-lg md:text-xl">{HOME_CONTENT.features.subtitle}</p>
+            <h2 className="text-4xl font-bold text-heading mb-3">Mengapa Memilih SI-APPA?</h2>
+            <p className="text-body text-lg md:text-xl">Kami berkomitmen melayani Anda dengan profesional dan terpercaya</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">

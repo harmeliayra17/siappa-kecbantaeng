@@ -101,17 +101,21 @@ export default function Lapor() {
       const { data, error } = await supabase
         .from('laporan_pengaduan')
         .insert([{
-          kode_tiket: kodeTiket,
-          status_pelapor: formBuat.status_pelapor,
-          nama_pelapor: formBuat.nama_pelapor || null,
-          kontak_pelapor: formBuat.kontak_pelapor,
-          kategori_id: parseInt(formBuat.kategori_id),
-          kronologi: formBuat.kronologi,
-          lokasi_kejadian: formBuat.lokasi_kejadian,
-          bukti_foto: formBuat.bukti_foto || null,
-          status_kasus: 'Pending'
-        }])
-        .select();
+        kode_tiket: kodeTiket,
+        status_pelapor: formBuat.status_pelapor,
+        nama_pelapor: formBuat.nama_pelapor || null,
+        kontak_pelapor: formBuat.kontak_pelapor,
+        kategori_id: parseInt(formBuat.kategori_id),
+        kronologi: formBuat.kronologi, 
+        lokasi_kejadian: formBuat.lokasi_kejadian,
+        usia: formBuat.usia ? parseInt(formBuat.usia) : null,
+        hubungan_korban: formBuat.hubungan_korban,
+        tanggal_kejadian: new Date().toISOString().split('T')[0], 
+        
+        bukti_foto: formBuat.bukti_foto || null,
+        status_kasus: 'Pending' 
+      }])
+      .select();
 
       if (error) throw error;
 

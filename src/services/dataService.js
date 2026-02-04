@@ -207,14 +207,14 @@ export const agendaService = {
 
   // Update agenda
   async updateAgenda(id, updates) {
-    try {
-      const { data, error } = await supabase
-        .from('agenda_kegiatan')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
+  try {
+    const { data, error } = await supabase
+      .from('agenda_kegiatan')
+      .update(updates) // Kirim updates object langsung
+      .eq('id', id)
+      .select()
+      .single();
+      
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
@@ -240,7 +240,7 @@ export const agendaService = {
   },
 };
 
-// ============ KONTEN EDUKASI ============
+// ============ KONTEN EDUKASI (YANG SUDAH DIPERBAIKI) ============
 
 export const edukasiService = {
   // Fetch semua artikel (publik)
@@ -277,11 +277,20 @@ export const edukasiService = {
   },
 
   // Create artikel baru (Kecamatan only)
-  async createEdukasi(edukasiData) {
+  async createEdukasi(formData) {
     try {
+      // ✅ SAFETY MAPPING: Pastikan nama kolom SAMA PERSIS dengan database
+      const payload = {
+        judul_artikel: formData.judul_artikel,
+        isi_konten: formData.isi_konten,
+        kategori: formData.kategori,
+        gambar_thumbnail: formData.gambar_thumbnail,
+        // created_at otomatis diisi database (default now())
+      };
+
       const { data, error } = await supabase
         .from('konten_edukasi')
-        .insert([edukasiData])
+        .insert([payload])
         .select()
         .single();
 
@@ -294,11 +303,20 @@ export const edukasiService = {
   },
 
   // Update artikel
-  async updateEdukasi(id, updates) {
+  async updateEdukasi(id, formData) {
     try {
+      // ✅ SAFETY MAPPING: Kita filter ulang
+      const payload = {
+        judul_artikel: formData.judul_artikel,
+        isi_konten: formData.isi_konten,
+        kategori: formData.kategori,
+        gambar_thumbnail: formData.gambar_thumbnail,
+        // Jangan update created_at saat edit
+      };
+
       const { data, error } = await supabase
         .from('konten_edukasi')
-        .update(updates)
+        .update(payload)
         .eq('id', id)
         .select()
         .single();

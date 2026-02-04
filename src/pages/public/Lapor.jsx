@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, CheckCircle, AlertCircle, Clock, ArrowRight, Download, Share2, MapPin, Calendar, User, Phone, Eye, EyeOff, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
+import ImageUpload from '../../components/common/ImageUpload';
 
 export default function Lapor() {
   const [activeTab, setActiveTab] = useState('buat'); // 'buat' atau 'cek'
@@ -456,16 +457,19 @@ export default function Lapor() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-heading mb-2">Link Bukti Foto/Dokumen (Opsional)</label>
-                    <input
-                      type="url"
-                      name="bukti_foto"
+                    <label className="block text-sm font-semibold text-heading mb-2">Bukti Foto/Dokumen (Opsional)</label>
+                    <ImageUpload
                       value={formBuat.bukti_foto}
-                      onChange={handleFormChange}
-                      placeholder="https://example.com/bukti.jpg atau link Google Drive/OneDrive"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      onChange={(url, path) => {
+                        setFormBuat(prev => ({
+                          ...prev,
+                          bukti_foto: url,
+                        }));
+                      }}
+                      uploadType="laporan"
+                      label=""
                     />
-                    <p className="text-xs text-gray-600 mt-1">💡 Bisa berupa link dari Google Drive, OneDrive, atau cloud storage lainnya</p>
+                    <p className="text-xs text-gray-600 mt-2">💡 Upload foto/dokumen bukti langsung dari galeri untuk membantu penanganan kasus lebih cepat</p>
                   </div>
 
                   {/* Preview Data */}

@@ -17,17 +17,13 @@ export default function AgendaForm() {
 
   const [formData, setFormData] = useState({
     judul_kegiatan: '',
-    deskripsi_kegiatan: '',
-    tanggal_mulai: '',
-    tanggal_selesai: '',
-    waktu_mulai: '',
-    waktu_selesai: '',
-    lokasi_kegiatan: '',
-    kategori_kegiatan: '',
+    jenis_agenda: '',
+    tanggal_pelaksanaan: '',
+    waktu: '',
+    lokasi: '',
+    deskripsi: '',
+    poster_url: '',
     desa_pemilik: profile?.desa_tugas || '',
-    status: 'Akan Datang',
-    gambar_thumbnail: '',
-    gambar_path: '',
   });
 
   useEffect(() => {
@@ -47,17 +43,13 @@ export default function AgendaForm() {
       if (result?.success && result.data) {
         setFormData({
           judul_kegiatan: result.data.judul_kegiatan || '',
-          deskripsi_kegiatan: result.data.deskripsi_kegiatan || '',
-          tanggal_mulai: result.data.tanggal_mulai || '',
-          tanggal_selesai: result.data.tanggal_selesai || '',
-          waktu_mulai: result.data.waktu_mulai || '',
-          waktu_selesai: result.data.waktu_selesai || '',
-          lokasi_kegiatan: result.data.lokasi_kegiatan || '',
-          kategori_kegiatan: result.data.kategori_kegiatan || '',
+          jenis_agenda: result.data.jenis_agenda || '',
+          tanggal_pelaksanaan: result.data.tanggal_pelaksanaan || '',
+          waktu: result.data.waktu || '',
+          lokasi: result.data.lokasi || '',
+          deskripsi: result.data.deskripsi || '',
+          poster_url: result.data.poster_url || '',
           desa_pemilik: result.data.desa_pemilik || profile?.desa_tugas || '',
-          status: result.data.status || 'Akan Datang',
-          gambar_thumbnail: result.data.gambar_thumbnail || '',
-          gambar_path: result.data.gambar_path || '',
         });
       }
     } catch (err) {
@@ -96,11 +88,11 @@ export default function AgendaForm() {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.judul_kegiatan.trim()) newErrors.judul_kegiatan = 'Judul kegiatan wajib diisi';
-    if (!formData.deskripsi_kegiatan.trim()) newErrors.deskripsi_kegiatan = 'Deskripsi wajib diisi';
-    if (!formData.tanggal_mulai) newErrors.tanggal_mulai = 'Tanggal mulai wajib diisi';
-    if (!formData.tanggal_selesai) newErrors.tanggal_selesai = 'Tanggal selesai wajib diisi';
-    if (!formData.lokasi_kegiatan.trim()) newErrors.lokasi_kegiatan = 'Lokasi wajib diisi';
-    if (!formData.kategori_kegiatan) newErrors.kategori_kegiatan = 'Kategori wajib dipilih';
+    if (!formData.deskripsi.trim()) newErrors.deskripsi = 'Deskripsi wajib diisi';
+    if (!formData.tanggal_pelaksanaan) newErrors.tanggal_pelaksanaan = 'Tanggal pelaksanaan wajib diisi';
+    if (!formData.waktu) newErrors.waktu = 'Waktu wajib diisi';
+    if (!formData.lokasi.trim()) newErrors.lokasi = 'Lokasi wajib diisi';
+    if (!formData.jenis_agenda.trim()) newErrors.jenis_agenda = 'Jenis agenda wajib diisi';
 
     return newErrors;
   };
@@ -187,115 +179,87 @@ export default function AgendaForm() {
             {errors.judul_kegiatan && <p className="text-red-600 text-sm mt-1">{errors.judul_kegiatan}</p>}
           </div>
 
+          {/* Jenis Agenda */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Jenis Agenda <span className="text-red-600">*</span>
+            </label>
+            <input
+              type="text"
+              name="jenis_agenda"
+              value={formData.jenis_agenda}
+              onChange={handleInputChange}
+              placeholder="Contoh: Workshop, Seminar, Kampanye, dll"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                errors.jenis_agenda ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {errors.jenis_agenda && <p className="text-red-600 text-sm mt-1">{errors.jenis_agenda}</p>}
+          </div>
+
           {/* Deskripsi */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Deskripsi <span className="text-red-600">*</span>
             </label>
             <textarea
-              name="deskripsi_kegiatan"
-              value={formData.deskripsi_kegiatan}
+              name="deskripsi"
+              value={formData.deskripsi}
               onChange={handleInputChange}
               placeholder="Jelaskan kegiatan ini..."
               rows={4}
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.deskripsi_kegiatan ? 'border-red-500' : 'border-gray-300'
+                errors.deskripsi ? 'border-red-500' : 'border-gray-300'
               }`}
             />
-            {errors.deskripsi_kegiatan && <p className="text-red-600 text-sm mt-1">{errors.deskripsi_kegiatan}</p>}
+            {errors.deskripsi && <p className="text-red-600 text-sm mt-1">{errors.deskripsi}</p>}
           </div>
 
-          {/* Gambar Thumbnail */}
+          {/* Poster/Gambar */}
           <ImageUpload
-            value={formData.gambar_thumbnail}
+            value={formData.poster_url}
             onChange={(url, path) => {
               setFormData(prev => ({
                 ...prev,
-                gambar_thumbnail: url,
-                gambar_path: path,
+                poster_url: url,
               }));
             }}
             uploadType="agenda"
-            label="Gambar Kegiatan"
+            label="Poster Kegiatan"
           />
 
-          {/* Kategori */}
+          {/* Tanggal Pelaksanaan */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Kategori <span className="text-red-600">*</span>
+              Tanggal Pelaksanaan <span className="text-red-600">*</span>
             </label>
-            <select
-              name="kategori_kegiatan"
-              value={formData.kategori_kegiatan}
+            <input
+              type="date"
+              name="tanggal_pelaksanaan"
+              value={formData.tanggal_pelaksanaan}
               onChange={handleInputChange}
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.kategori_kegiatan ? 'border-red-500' : 'border-gray-300'
+                errors.tanggal_pelaksanaan ? 'border-red-500' : 'border-gray-300'
               }`}
-            >
-              <option value="">Pilih Kategori</option>
-              {kategoris.map(k => (
-                <option key={k.id} value={k.id}>{k.nama_kategori}</option>
-              ))}
-            </select>
-            {errors.kategori_kegiatan && <p className="text-red-600 text-sm mt-1">{errors.kategori_kegiatan}</p>}
-          </div>
-
-          {/* Tanggal */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Tanggal Mulai <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="date"
-                name="tanggal_mulai"
-                value={formData.tanggal_mulai}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                  errors.tanggal_mulai ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.tanggal_mulai && <p className="text-red-600 text-sm mt-1">{errors.tanggal_mulai}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Tanggal Selesai <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="date"
-                name="tanggal_selesai"
-                value={formData.tanggal_selesai}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                  errors.tanggal_selesai ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.tanggal_selesai && <p className="text-red-600 text-sm mt-1">{errors.tanggal_selesai}</p>}
-            </div>
+            />
+            {errors.tanggal_pelaksanaan && <p className="text-red-600 text-sm mt-1">{errors.tanggal_pelaksanaan}</p>}
           </div>
 
           {/* Waktu */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Waktu Mulai</label>
-              <input
-                type="time"
-                name="waktu_mulai"
-                value={formData.waktu_mulai}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Waktu Selesai</label>
-              <input
-                type="time"
-                name="waktu_selesai"
-                value={formData.waktu_selesai}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Waktu Pelaksanaan <span className="text-red-600">*</span>
+            </label>
+            <input
+              type="time"
+              name="waktu"
+              value={formData.waktu}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                errors.waktu ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {errors.waktu && <p className="text-red-600 text-sm mt-1">{errors.waktu}</p>}
           </div>
 
           {/* Lokasi */}
@@ -305,30 +269,15 @@ export default function AgendaForm() {
             </label>
             <input
               type="text"
-              name="lokasi_kegiatan"
-              value={formData.lokasi_kegiatan}
+              name="lokasi"
+              value={formData.lokasi}
               onChange={handleInputChange}
               placeholder="Masukkan lokasi kegiatan"
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.lokasi_kegiatan ? 'border-red-500' : 'border-gray-300'
+                errors.lokasi ? 'border-red-500' : 'border-gray-300'
               }`}
             />
-            {errors.lokasi_kegiatan && <p className="text-red-600 text-sm mt-1">{errors.lokasi_kegiatan}</p>}
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="Akan Datang">Akan Datang</option>
-              <option value="Sedang Berlangsung">Sedang Berlangsung</option>
-              <option value="Selesai">Selesai</option>
-            </select>
+            {errors.lokasi && <p className="text-red-600 text-sm mt-1">{errors.lokasi}</p>}
           </div>
 
           {/* Buttons */}

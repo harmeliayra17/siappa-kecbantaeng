@@ -56,6 +56,8 @@ export default function ImageUpload({
         uploadFunc = storageService.uploadAgendaImage;
       } else if (uploadType === 'edukasi') {
         uploadFunc = storageService.uploadEdukasiImage;
+      } else if (uploadType === 'laporan') {
+        uploadFunc = storageService.uploadLaporanImage;
       } else {
         uploadFunc = storageService.uploadWebsiteImage;
       }

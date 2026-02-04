@@ -14,12 +14,10 @@ export default function EdukasiForm() {
   const [kategoris, setKategoris] = useState([]);
 
   const [formData, setFormData] = useState({
-    judul_konten: '',
+    judul_artikel: '',
     isi_konten: '',
-    penulis: '',
-    kategori_id: '',
-    featured_image_url: '',
-    gambar_path: '',
+    kategori: '',
+    gambar_thumbnail: '',
   });
 
   useEffect(() => {
@@ -38,12 +36,10 @@ export default function EdukasiForm() {
       const result = await edukasiService.getEdukasiById(id);
       if (result?.success && result.data) {
         setFormData({
-          judul_konten: result.data.judul_konten || '',
+          judul_artikel: result.data.judul_artikel || '',
           isi_konten: result.data.isi_konten || '',
-          penulis: result.data.penulis || '',
-          kategori_id: result.data.kategori_id || '',
-          featured_image_url: result.data.featured_image_url || '',
-          gambar_path: result.data.gambar_path || '',
+          kategori: result.data.kategori || '',
+          gambar_thumbnail: result.data.gambar_thumbnail || '',
         });
       }
     } catch (err) {
@@ -81,10 +77,9 @@ export default function EdukasiForm() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.judul_konten.trim()) newErrors.judul_konten = 'Judul wajib diisi';
+    if (!formData.judul_artikel.trim()) newErrors.judul_artikel = 'Judul wajib diisi';
     if (!formData.isi_konten.trim()) newErrors.isi_konten = 'Isi konten wajib diisi';
-    if (!formData.penulis.trim()) newErrors.penulis = 'Penulis wajib diisi';
-    if (!formData.kategori_id) newErrors.kategori_id = 'Kategori wajib dipilih';
+    if (!formData.kategori.trim()) newErrors.kategori = 'Kategori wajib diisi';
 
     return newErrors;
   };
@@ -105,10 +100,7 @@ export default function EdukasiForm() {
       let result;
       
       if (isEditMode) {
-        result = await edukasiService.updateEdukasi(id, {
-          ...formData,
-          kategori_id: parseInt(formData.kategori_id),
-        });
+        result = await edukasiService.updateEdukasi(id, formData);
         if (result?.success) {
           alert('Konten edukasi berhasil diperbarui');
           navigate('/admin/cms/edukasi');
@@ -116,10 +108,7 @@ export default function EdukasiForm() {
           setSubmitError(result?.error || 'Gagal memperbarui konten edukasi');
         }
       } else {
-        result = await edukasiService.createEdukasi({
-          ...formData,
-          kategori_id: parseInt(formData.kategori_id),
-        });
+        result = await edukasiService.createEdukasi(formData);
         if (result?.success) {
           alert('Konten edukasi berhasil ditambahkan');
           navigate('/admin/cms/edukasi');
@@ -159,14 +148,13 @@ export default function EdukasiForm() {
               <p>{submitError}</p>
             </div>
           )}
-          {/* Featured Image */}
+          {/* Gambar Thumbnail */}
           <ImageUpload
-            value={formData.featured_image_url}
+            value={formData.gambar_thumbnail}
             onChange={(url, path) => {
               setFormData(prev => ({
                 ...prev,
-                featured_image_url: url,
-                gambar_path: path,
+                gambar_thumbnail: url,
               }));
             }}
             uploadType="edukasi"
@@ -176,37 +164,19 @@ export default function EdukasiForm() {
           {/* Judul */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Judul <span className="text-red-600">*</span>
+              Judul Artikel <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
-              name="judul_konten"
-              value={formData.judul_konten}
+              name="judul_artikel"
+              value={formData.judul_artikel}
               onChange={handleInputChange}
-              placeholder="Masukkan judul konten"
+              placeholder="Masukkan judul artikel"
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.judul_konten ? 'border-red-500' : 'border-gray-300'
+                errors.judul_artikel ? 'border-red-500' : 'border-gray-300'
               }`}
             />
-            {errors.judul_konten && <p className="text-red-600 text-sm mt-1">{errors.judul_konten}</p>}
-          </div>
-
-          {/* Penulis */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Penulis <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              name="penulis"
-              value={formData.penulis}
-              onChange={handleInputChange}
-              placeholder="Nama penulis"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.penulis ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.penulis && <p className="text-red-600 text-sm mt-1">{errors.penulis}</p>}
+            {errors.judul_artikel && <p className="text-red-600 text-sm mt-1">{errors.judul_artikel}</p>}
           </div>
 
           {/* Kategori */}
@@ -214,20 +184,17 @@ export default function EdukasiForm() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Kategori <span className="text-red-600">*</span>
             </label>
-            <select
-              name="kategori_id"
-              value={formData.kategori_id}
+            <input
+              type="text"
+              name="kategori"
+              value={formData.kategori}
               onChange={handleInputChange}
+              placeholder="Contoh: Kesehatan, Pendidikan, Hukum, dll"
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.kategori_id ? 'border-red-500' : 'border-gray-300'
+                errors.kategori ? 'border-red-500' : 'border-gray-300'
               }`}
-            >
-              <option value="">Pilih Kategori</option>
-              {kategoris.map(k => (
-                <option key={k.id} value={k.id}>{k.nama_kategori}</option>
-              ))}
-            </select>
-            {errors.kategori_id && <p className="text-red-600 text-sm mt-1">{errors.kategori_id}</p>}
+            />
+            {errors.kategori && <p className="text-red-600 text-sm mt-1">{errors.kategori}</p>}
           </div>
 
           {/* Isi Konten */}

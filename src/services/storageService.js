@@ -106,4 +106,9 @@ export const storageService = {
   async uploadWebsiteImage(file) {
     return this.uploadImage(file, 'si-appa-content', 'website');
   },
+
+  // Upload untuk Laporan Pengaduan bukti foto
+  async uploadLaporanImage(file) {
+    return this.uploadImage(file, 'si-appa-content', 'laporan');
+  },
 };

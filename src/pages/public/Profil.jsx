@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, Mail, MapPin, Users, Search, Building2 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
+import { settingsService } from '../../services/dataService';
 
 export default function Profil() {
   const [satgas, setSatgas] = useState([]);
@@ -8,6 +9,42 @@ export default function Profil() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDesa, setSelectedDesa] = useState('');
   const [desas, setDesas] = useState([]);
+  const [profilSettings, setProfilSettings] = useState({
+    profil_title: 'Profil Satgas & Kontak',
+    profil_vision: '',
+    profil_mission: '',
+    profil_about_text: 'Tim Perlindungan Perempuan dan Anak di setiap desa',
+    profil_about_image: null,
+    contact_email: 'pengaduan@siappa.bantaeng.go.id',
+    contact_phone: '+62 812-3456-7890',
+    contact_address: 'Kecamatan Bantaeng',
+    social_media_instagram: '',
+    social_media_facebook: ''
+  });
+
+  // Fetch profil settings
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProfilSettings = async () => {
+      try {
+        const result = await settingsService.getProfilSettings();
+        if (isMounted && result.success && result.data) {
+          setProfilSettings(prev => ({
+            ...prev,
+            ...result.data
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching profil settings:', err);
+      }
+    };
+
+    fetchProfilSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Fetch satgas data
   useEffect(() => {
@@ -60,8 +97,8 @@ export default function Profil() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-heading mb-3">Profil Satgas & Kontak</h1>
-          <p className="text-lg text-body">Daftar lengkap Tim Satgas Perlindungan Perempuan dan Anak di setiap desa</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-heading mb-3">{profilSettings.profil_title || 'Profil Satgas & Kontak'}</h1>
+          <p className="text-lg text-body">{profilSettings.profil_about_text || 'Tim Perlindungan Perempuan dan Anak di setiap desa'}</p>
         </div>
 
         {/* Search & Filter */}
@@ -190,21 +227,21 @@ export default function Profil() {
             <div>
               <p className="text-white/90 mb-2">Hubungi Layanan Pengaduan 24/7:</p>
               <a
-                href="https://wa.me/6281234567890"
+                href={`https://wa.me/${profilSettings.contact_phone?.replace(/[^\d]/g, '') || '6281234567890'}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-3xl font-bold text-white hover:underline"
               >
-                +62 812-3456-7890
+                {profilSettings.contact_phone || '+62 812-3456-7890'}
               </a>
             </div>
             <div>
               <p className="text-white/90 mb-2">Email Pengaduan:</p>
               <a
-                href="mailto:pengaduan@siappa.bantaeng.go.id"
+                href={`mailto:${profilSettings.contact_email || 'pengaduan@siappa.bantaeng.go.id'}`}
                 className="text-lg font-bold text-white hover:underline"
               >
-                pengaduan@siappa.bantaeng.go.id
+                {profilSettings.contact_email || 'pengaduan@siappa.bantaeng.go.id'}
               </a>
             </div>
           </div>

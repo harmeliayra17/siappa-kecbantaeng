@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { agendaService, masterService } from '../../../services/dataService';
+import ImageUpload from '../../../components/common/ImageUpload';
 import { ArrowLeft, Save } from 'lucide-react';
 
 export default function AgendaForm() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(!!id);
   const [errors, setErrors] = useState({});
   const [kategoris, setKategoris] = useState([]);
 
@@ -22,11 +25,44 @@ export default function AgendaForm() {
     kategori_kegiatan: '',
     desa_pemilik: profile?.desa_tugas || '',
     status: 'Akan Datang',
+    gambar_thumbnail: '',
+    gambar_path: '',
   });
 
   useEffect(() => {
     fetchKategoris();
+    if (isEditMode) {
+      fetchAgendaData();
+    }
   }, []);
+
+  const fetchAgendaData = async () => {
+    try {
+      setLoading(true);
+      const result = await agendaService.getAgendaById(id);
+      if (result?.success && result.data) {
+        setFormData({
+          judul_kegiatan: result.data.judul_kegiatan || '',
+          deskripsi_kegiatan: result.data.deskripsi_kegiatan || '',
+          tanggal_mulai: result.data.tanggal_mulai || '',
+          tanggal_selesai: result.data.tanggal_selesai || '',
+          waktu_mulai: result.data.waktu_mulai || '',
+          waktu_selesai: result.data.waktu_selesai || '',
+          lokasi_kegiatan: result.data.lokasi_kegiatan || '',
+          kategori_kegiatan: result.data.kategori_kegiatan || '',
+          desa_pemilik: result.data.desa_pemilik || profile?.desa_tugas || '',
+          status: result.data.status || 'Akan Datang',
+          gambar_thumbnail: result.data.gambar_thumbnail || '',
+          gambar_path: result.data.gambar_path || '',
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching agenda:', err);
+      alert('Gagal memuat data kegiatan');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchKategoris = async () => {
     try {
@@ -76,16 +112,27 @@ export default function AgendaForm() {
 
     try {
       setLoading(true);
-      const result = await agendaService.createAgenda(formData);
-
-      if (result?.success) {
-        alert('Kegiatan berhasil ditambahkan');
-        navigate('/admin/cms/agenda');
+      let result;
+      
+      if (isEditMode) {
+        result = await agendaService.updateAgenda(id, formData);
+        if (result?.success) {
+          alert('Kegiatan berhasil diperbarui');
+          navigate('/admin/cms/agenda');
+        } else {
+          alert('Gagal memperbarui kegiatan');
+        }
       } else {
-        alert('Gagal menambahkan kegiatan');
+        result = await agendaService.createAgenda(formData);
+        if (result?.success) {
+          alert('Kegiatan berhasil ditambahkan');
+          navigate('/admin/cms/agenda');
+        } else {
+          alert('Gagal menambahkan kegiatan');
+        }
       }
     } catch (err) {
-      console.error('Error creating agenda:', err);
+      console.error('Error:', err);
       alert('Terjadi kesalahan');
     } finally {
       setLoading(false);
@@ -102,7 +149,9 @@ export default function AgendaForm() {
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Tambah Kegiatan</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {isEditMode ? 'Edit Kegiatan' : 'Tambah Kegiatan'}
+        </h1>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
@@ -142,6 +191,20 @@ export default function AgendaForm() {
             />
             {errors.deskripsi_kegiatan && <p className="text-red-600 text-sm mt-1">{errors.deskripsi_kegiatan}</p>}
           </div>
+
+          {/* Gambar Thumbnail */}
+          <ImageUpload
+            value={formData.gambar_thumbnail}
+            onChange={(url, path) => {
+              setFormData(prev => ({
+                ...prev,
+                gambar_thumbnail: url,
+                gambar_path: path,
+              }));
+            }}
+            uploadType="agenda"
+            label="Gambar Kegiatan"
+          />
 
           {/* Kategori */}
           <div>
@@ -270,7 +333,7 @@ export default function AgendaForm() {
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold disabled:opacity-50"
             >
               <Save size={20} />
-              {loading ? 'Menyimpan...' : 'Simpan'}
+              {loading ? (isEditMode ? 'Memperbarui...' : 'Menyimpan...') : (isEditMode ? 'Perbarui' : 'Simpan')}
             </button>
           </div>
         </form>

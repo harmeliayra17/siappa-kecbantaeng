@@ -22,6 +22,8 @@ const AgendaForm = lazy(() => import('./cms/AgendaForm'));
 const EdukasiList = lazy(() => import('./cms/EdukasiList'));
 const EdukasiForm = lazy(() => import('./cms/EdukasiForm'));
 const WebsitePublikCMS = lazy(() => import('./cms/WebsitePublikCMS'));
+const HomeContentCMS = lazy(() => import('./cms/HomeContentCMS'));
+const ProfilContentCMS = lazy(() => import('./cms/ProfilContentCMS'));
 const WebSettings = lazy(() => import('./settings/WebSettings'));
 const AkunSatgas = lazy(() => import('./settings/AkunSatgas'));
 
@@ -42,9 +44,13 @@ export default function AdminRoutes() {
           {/* CMS */}
           <Route path="cms/agenda" element={<AgendaList />} />
           <Route path="cms/agenda/tambah" element={<AgendaForm />} />
+          <Route path="cms/agenda/edit/:id" element={<AgendaForm />} />
           <Route path="cms/edukasi" element={isSuperAdmin() ? <EdukasiList /> : <Navigate to="/admin/dashboard" replace />} />
           <Route path="cms/edukasi/tambah" element={isSuperAdmin() ? <EdukasiForm /> : <Navigate to="/admin/dashboard" replace />} />
+          <Route path="cms/edukasi/edit/:id" element={isSuperAdmin() ? <EdukasiForm /> : <Navigate to="/admin/dashboard" replace />} />
           <Route path="cms/website" element={isSuperAdmin() ? <WebsitePublikCMS /> : <Navigate to="/admin/dashboard" replace />} />
+          <Route path="cms/home-content" element={isSuperAdmin() ? <HomeContentCMS /> : <Navigate to="/admin/dashboard" replace />} />
+          <Route path="cms/profil-content" element={isSuperAdmin() ? <ProfilContentCMS /> : <Navigate to="/admin/dashboard" replace />} />
 
           {/* Settings - Kecamatan only */}
           <Route path="settings" element={isSuperAdmin() ? <WebSettings /> : <Navigate to="/admin/dashboard" replace />} />

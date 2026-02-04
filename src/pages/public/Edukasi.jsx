@@ -177,7 +177,7 @@ export default function Edukasi() {
                   {/* Preview Text - Slide Up on Hover */}
                   <div className="space-y-3">
                     <div className="h-16 relative overflow-hidden">
-                      <p className="text-sm text-gray-200 line-clamp-3 group-hover:text-white transition-colors duration-300 absolute top-0 group-hover:top-0 group-hover:animate-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <p className="text-sm text-gray-200 line-clamp-3 group-hover:text-white transition-all duration-300 absolute top-0 group-hover:top-0 group-hover:animate-none opacity-0 group-hover:opacity-100">
                         {truncateText(article.isi_konten || '', 150)}
                       </p>
                     </div>

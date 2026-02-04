@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { edukasiService, masterService } from '../../../services/dataService';
+import ImageUpload from '../../../components/common/ImageUpload';
 import { ArrowLeft, Save } from 'lucide-react';
 
 export default function EdukasiForm() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(!!id);
   const [errors, setErrors] = useState({});
   const [kategoris, setKategoris] = useState([]);
 
@@ -15,11 +18,37 @@ export default function EdukasiForm() {
     penulis: '',
     kategori_id: '',
     featured_image_url: '',
+    gambar_path: '',
   });
 
   useEffect(() => {
     fetchKategoris();
+    if (isEditMode) {
+      fetchEdukasiData();
+    }
   }, []);
+
+  const fetchEdukasiData = async () => {
+    try {
+      setLoading(true);
+      const result = await edukasiService.getEdukasiById(id);
+      if (result?.success && result.data) {
+        setFormData({
+          judul_konten: result.data.judul_konten || '',
+          isi_konten: result.data.isi_konten || '',
+          penulis: result.data.penulis || '',
+          kategori_id: result.data.kategori_id || '',
+          featured_image_url: result.data.featured_image_url || '',
+          gambar_path: result.data.gambar_path || '',
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching edukasi:', err);
+      alert('Gagal memuat data konten');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchKategoris = async () => {
     try {
@@ -67,19 +96,33 @@ export default function EdukasiForm() {
 
     try {
       setLoading(true);
-      const result = await edukasiService.createEdukasi({
-        ...formData,
-        kategori_id: parseInt(formData.kategori_id),
-      });
-
-      if (result?.success) {
-        alert('Konten edukasi berhasil ditambahkan');
-        navigate('/admin/cms/edukasi');
+      let result;
+      
+      if (isEditMode) {
+        result = await edukasiService.updateEdukasi(id, {
+          ...formData,
+          kategori_id: parseInt(formData.kategori_id),
+        });
+        if (result?.success) {
+          alert('Konten edukasi berhasil diperbarui');
+          navigate('/admin/cms/edukasi');
+        } else {
+          alert('Gagal memperbarui konten edukasi');
+        }
       } else {
-        alert('Gagal menambahkan konten edukasi');
+        result = await edukasiService.createEdukasi({
+          ...formData,
+          kategori_id: parseInt(formData.kategori_id),
+        });
+        if (result?.success) {
+          alert('Konten edukasi berhasil ditambahkan');
+          navigate('/admin/cms/edukasi');
+        } else {
+          alert('Gagal menambahkan konten edukasi');
+        }
       }
     } catch (err) {
-      console.error('Error creating edukasi:', err);
+      console.error('Error:', err);
       alert('Terjadi kesalahan');
     } finally {
       setLoading(false);
@@ -96,11 +139,27 @@ export default function EdukasiForm() {
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Tambah Konten Edukasi</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {isEditMode ? 'Edit Konten Edukasi' : 'Tambah Konten Edukasi'}
+        </h1>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Featured Image */}
+          <ImageUpload
+            value={formData.featured_image_url}
+            onChange={(url, path) => {
+              setFormData(prev => ({
+                ...prev,
+                featured_image_url: url,
+                gambar_path: path,
+              }));
+            }}
+            uploadType="edukasi"
+            label="Gambar Artikel"
+          />
+
           {/* Judul */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -204,7 +263,7 @@ export default function EdukasiForm() {
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold disabled:opacity-50"
             >
               <Save size={20} />
-              {loading ? 'Menyimpan...' : 'Simpan'}
+              {loading ? (isEditMode ? 'Memperbarui...' : 'Menyimpan...') : (isEditMode ? 'Perbarui' : 'Simpan')}
             </button>
           </div>
         </form>

@@ -19,7 +19,7 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-11/12 max-w-6xl">
-      <div className="bg-white/80 backdrop-blur-xl rounded-full shadow-lg px-6 py-3 md:px-8 md:py-4 border border-white/40 transition-all duration-300">
+      <div className={`bg-white/80 backdrop-blur-xl shadow-lg px-6 py-3 md:px-8 md:py-4 border border-white/40 transition-all duration-300 ${isOpen ? 'rounded-2xl' : 'rounded-full'}`}>
         <div className="flex items-center justify-between">
           
           <Link to="/" className="flex items-center gap-3 group shrink-0">

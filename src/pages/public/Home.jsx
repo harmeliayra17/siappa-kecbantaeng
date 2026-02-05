@@ -170,15 +170,6 @@ export default function Home() {
               {webSettings.deskripsi_singkat}
             </p>
 
-            {/* Kontak Cepat */}
-            <div className="flex flex-wrap gap-4 mb-8 text-sm text-gray-600 justify-center md:justify-start">
-               {webSettings.contact_phone && (
-                 <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full border border-primary/20">
-                    <Phone size={16} className="text-primary"/> {webSettings.contact_phone}
-                 </div>
-               )}
-            </div>
-
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link to="/lapor">
                 <button className="btn-primary px-8 py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2 w-full sm:w-auto">

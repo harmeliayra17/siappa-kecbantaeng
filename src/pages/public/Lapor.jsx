@@ -222,6 +222,32 @@ export default function Lapor() {
     const days = Math.ceil((finished - created) / (1000 * 60 * 60 * 24));
     return `${days} hari`;
   };
+  
+  // 1. Fungsi Share (Membuka WA/Copy Clipboard)
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Status Laporan SI-APPA',
+      text: `Pantau laporan saya di SI-APPA.\nKode Tiket: ${statusLaporan.kode_tiket}\nStatus: ${statusLaporan.status_kasus}`,
+      url: window.location.href // Atau link website spesifik
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Share dibatalkan');
+      }
+    } else {
+      // Fallback untuk browser laptop lama
+      navigator.clipboard.writeText(shareData.text);
+      alert('Info tiket berhasil disalin ke clipboard!');
+    }
+  };
+
+  // 2. Fungsi Download (Cetak Halaman jadi PDF)
+  const handleDownload = () => {
+    window.print();
+  };
 
   return (
     <div className="min-h-screen pt-36 pb-12 px-6" style={{
@@ -601,10 +627,19 @@ export default function Lapor() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button className="p-2 hover:bg-black/10 rounded-lg transition" title="Share">
+                        <button 
+                          onClick={handleShare} // Tambahkan ini
+                          className="p-2 hover:bg-black/10 rounded-lg transition" 
+                          title="Bagikan Tiket"
+                        >
                           <Share2 className="w-5 h-5" />
                         </button>
-                        <button className="p-2 hover:bg-black/10 rounded-lg transition" title="Download">
+                        
+                        <button 
+                          onClick={handleDownload} // Tambahkan ini
+                          className="p-2 hover:bg-black/10 rounded-lg transition" 
+                          title="Simpan sebagai PDF"
+                        >
                           <Download className="w-5 h-5" />
                         </button>
                       </div>

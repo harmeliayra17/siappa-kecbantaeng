@@ -197,3 +197,20 @@ html, body {
   color: #888888;
   font-weight: 400;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  /* Ganti .border-l-4.border-primary... dengan class pembungkus tiket abang */
+  /* Cara termudah: Tambahkan id="tiket-area" di div pembungkus hasil pencarian */
+  #tiket-area, #tiket-area * {
+    visibility: visible;
+  }
+  #tiket-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

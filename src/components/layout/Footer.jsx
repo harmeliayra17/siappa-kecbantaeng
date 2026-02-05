@@ -48,7 +48,7 @@ export default function Footer() {
                 onError={(e) => e.target.style.display = 'none'}
               />
               {/* Dinamis: Nama Aplikasi */}
-              <span className="text-xl font-bold">{settings.teks_sapaan}</span>
+              <span className="text-xl font-bold">SI-APPA</span>
             </div>
             {/* Dinamis: Deskripsi */}
             <p className="text-sm text-white/80 leading-relaxed">
@@ -127,7 +127,7 @@ export default function Footer() {
 
           {/* Kolom 4: Kontak Info (HP & Email) */}
           <div>
-            <h3 className="font-bold text-base mb-4">Layanan 24/7</h3>
+            <h3 className="font-bold text-base mb-4">Layanan</h3>
             <div className="space-y-4 text-sm">
               <div className="flex gap-3">
                 <Phone className="w-5 h-5 flex-shrink-0 text-white/60 mt-0.5" />

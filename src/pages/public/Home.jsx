@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, MapPin, FileText, Hash, ArrowRight, Users, Shield, Zap, Heart, Phone, Clock } from 'lucide-react';
+import { CheckCircle, MapPin, FileText, Hash, ArrowRight, Users, Shield, Zap, Heart, Phone } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { settingsService } from '../../services/dataService';
 
 export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // State Data Dinamis (Default Value biar gak error saat loading)
+  // State Data Dinamis
   const [webSettings, setWebSettings] = useState({
     teks_sapaan: 'Selamat Datang di SI-APPA',
     home_hero_subtitle: 'Anda Tidak Sendiri, Kami Siap Melindungi',
     deskripsi_singkat: 'Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.',
     contact_phone: '',
-    jam_kerja: ''
   });
 
   const [stats, setStats] = useState({
@@ -27,7 +26,7 @@ export default function Home() {
   
   const [loading, setLoading] = useState(true);
   
-  // Gambar Default (Fallback)
+  // Gambar Default
   const defaultImages = [
     '/observasi-lembang-lembang.jpeg',
     '/sosialisasi-sd2lembangcina.jpeg',
@@ -44,7 +43,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [heroImages]);
 
-  // Fetch Data dari Database
+  // Fetch Data
   useEffect(() => {
     let isMounted = true;
 
@@ -52,17 +51,17 @@ export default function Home() {
       try {
         setLoading(true);
         
-        // 1. Ambil Pengaturan Web (Judul, Gambar, Kontak)
+        // 1. Ambil Pengaturan Web
         const settingsResult = await settingsService.getSettings();
         if (isMounted && settingsResult.success && settingsResult.data) {
           setWebSettings(prev => ({ ...prev, ...settingsResult.data }));
 
-          // Cek apakah ada gambar hero dari database
+          // Cek gambar hero
           const dbImages = [
             settingsResult.data.home_hero_image_1,
             settingsResult.data.home_hero_image_2,
             settingsResult.data.home_hero_image_3
-          ].filter(img => img); // Filter yang tidak kosong
+          ].filter(img => img);
 
           if (dbImages.length > 0) {
             setHeroImages(dbImages);
@@ -72,17 +71,17 @@ export default function Home() {
         // 2. Ambil Statistik Laporan
         const { data: laporan, error } = await supabase
           .from('laporan_pengaduan')
-          .select('status_kasus, created_at, tanggal_selesai, lokasi_kejadian, kategori_id')
-          .order('created_at', { ascending: false })
-          .limit(1000);
+          .select('status_kasus, created_at, tanggal_selesai, lokasi_kejadian, kategori_id'); 
+          // Hapus .limit(1000) biar totalnya akurat semua
 
         if (error) throw error;
 
         if (isMounted && laporan && laporan.length > 0) {
           const total = laporan.length;
+          // Pastikan 'Selesai' match dengan database (Case Sensitive)
           const selesai = laporan.filter(l => l.status_kasus === 'Selesai').length;
           
-          // Desa Terlayani (Distinct)
+          // Desa Terlayani (Unik)
           const desaSet = new Set(laporan.map(l => l.lokasi_kejadian).filter(Boolean));
           const desa = desaSet.size;
 
@@ -94,16 +93,18 @@ export default function Home() {
             const totalHari = selesaiLaporan.reduce((sum, l) => {
               const created = new Date(l.created_at);
               const selesaiDate = new Date(l.tanggal_selesai);
-              const hari = Math.ceil((selesaiDate - created) / (1000 * 60 * 60 * 24));
-              return sum + hari;
+              // Hitung selisih hari
+              const diffTime = Math.abs(selesaiDate - created);
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+              return sum + diffDays;
             }, 0);
             rataRata = Math.round(totalHari / selesaiLaporan.length).toString();
           }
 
-          // Kategori (Batch Fetch)
+          // Hitung Kategori (Perempuan vs Anak)
           const kategoriIds = [...new Set(laporan.map(l => l.kategori_id).filter(Boolean))];
-          let perempuan = 0;
-          let anak = 0;
+          let perempuanCount = 0;
+          let anakCount = 0;
 
           if (kategoriIds.length > 0) {
             const { data: kategoriBatch } = await supabase
@@ -112,18 +113,21 @@ export default function Home() {
               .in('id', kategoriIds);
 
             if (kategoriBatch) {
-              kategoriBatch.forEach(kat => {
-                const count = laporan.filter(l => l.kategori_id === kat.id).length;
-                if (kat.kelompok === 'Perempuan') perempuan = count;
-                if (kat.kelompok === 'Anak') anak = count;
+              // ✅ PERBAIKAN LOGIKA: Pakai map/reduce biar lebih efisien & akurat
+              laporan.forEach(lapor => {
+                const k = kategoriBatch.find(kat => kat.id === lapor.kategori_id);
+                if (k) {
+                  if (k.kelompok === 'Perempuan') perempuanCount++;
+                  if (k.kelompok === 'Anak') anakCount++;
+                }
               });
             }
           }
 
           setStats({
             totalLaporan: total,
-            laporanPerempuan: perempuan,
-            laporanAnak: anak,
+            laporanPerempuan: perempuanCount,
+            laporanAnak: anakCount,
             kasusSelesai: selesai,
             desaTerlayani: desa,
             rataRataWaktu: rataRata
@@ -150,25 +154,30 @@ export default function Home() {
       
       {/* HERO SECTION */}
       <section className="pt-32 pb-20 px-0 relative overflow-hidden">
-        {/* Decorative Shapes */}
         <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-primary/5 blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-secondary/5 blur-3xl"></div>
         
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center relative z-10">
           <div className="text-center md:text-left animate-fade-in-up mt-8">
-            {/* JUDUL DINAMIS */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-heading mb-6 leading-tight">
-              <br/>
+              Selamat Datang di <br/>
               <span className="text-primary">{webSettings.teks_sapaan}</span>
             </h1>
-            {/* SUBJUDUL DINAMIS */}
             <p className="gradient-text text-xl md:text-2xl font-semibold mb-6">
                "{webSettings.home_hero_subtitle}"
             </p>
-            {/* DESKRIPSI (Hardcoded atau bisa diambil dari DB jika mau) */}
             <p className="text-lg md:text-xl text-body mb-8 leading-relaxed max-w-lg">
-              Sistem Informasi Asa Pemberdayaan Perempuan dan Anak (SI-APPA) Kecamatan Bantaeng hadir sebagai ruang aman bagi Anda untuk bersuara dan berdaya.
+              {webSettings.deskripsi_singkat}
             </p>
+
+            {/* Kontak Cepat */}
+            <div className="flex flex-wrap gap-4 mb-8 text-sm text-gray-600 justify-center md:justify-start">
+               {webSettings.contact_phone && (
+                 <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full border border-primary/20">
+                    <Phone size={16} className="text-primary"/> {webSettings.contact_phone}
+                 </div>
+               )}
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link to="/lapor">
@@ -186,7 +195,6 @@ export default function Home() {
 
           <div className="hidden md:block">
             <div className="relative w-full h-[450px] mt-8 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50">
-              {/* GAMBAR CAROUSEL DINAMIS */}
               {heroImages.map((img, idx) => (
                 <img
                   key={idx}
@@ -197,27 +205,20 @@ export default function Home() {
                   }`}
                 />
               ))}
-              
-              {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-              
-              {/* Carousel Indicators */}
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
                 {heroImages.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}
                     className={`w-3 h-3 rounded-full transition-all ${
-                      idx === currentImageIndex 
-                        ? 'bg-white w-8' 
-                        : 'bg-white/50 hover:bg-white/75'
+                      idx === currentImageIndex ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/75'
                     }`}
                   />
                 ))}
               </div>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -226,59 +227,42 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-4xl font-bold text-center text-heading mb-4">Statistik Transparansi</h2>
           <p className="text-center text-body text-lg md:text-xl mb-12">Komitmen kami dalam melayani masyarakat</p>
+          
           <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {/* Kartu 1 - Total Laporan */}
             <div className="card-clean hover-lift p-8 text-center relative">
-              <div className="icon-container mx-auto mb-4">
-                <FileText className="w-7 h-7 text-primary" />
-              </div>
+              <div className="icon-container mx-auto mb-4"><FileText className="w-7 h-7 text-primary" /></div>
               <h3 className="text-2xl md:text-3xl font-bold text-heading mb-2 relative z-10">{loading ? '-' : stats.totalLaporan}</h3>
-              <p className="text-body text-sm relative z-10">Total Laporan Masuk</p>
+              <p className="text-body text-sm relative z-10">Total Laporan</p>
             </div>
 
-            {/* Kartu 2 - Laporan Perempuan */}
             <div className="card-clean hover-lift p-8 text-center relative overflow-hidden">
-              <div className="icon-container mx-auto mb-4 relative z-10">
-                <Heart className="w-7 h-7 text-primary" />
-              </div>
+              <div className="icon-container mx-auto mb-4 relative z-10"><Heart className="w-7 h-7 text-primary" /></div>
               <h3 className="text-2xl md:text-3xl font-bold text-heading mb-2 relative z-10">{loading ? '-' : stats.laporanPerempuan}</h3>
-              <p className="text-body text-sm relative z-10">Laporan Perempuan</p>
+              <p className="text-body text-sm relative z-10">Kasus Perempuan</p>
             </div>
 
-            {/* Kartu 3 - Laporan Anak */}
             <div className="card-clean hover-lift p-8 text-center relative overflow-hidden">
-              <div className="icon-container mx-auto mb-4 relative z-10">
-                <Users className="w-7 h-7 text-primary" />
-              </div>
+              <div className="icon-container mx-auto mb-4 relative z-10"><Users className="w-7 h-7 text-primary" /></div>
               <h3 className="text-2xl md:text-3xl font-bold text-heading mb-2 relative z-10">{loading ? '-' : stats.laporanAnak}</h3>
-              <p className="text-body text-sm relative z-10">Laporan Anak</p>
+              <p className="text-body text-sm relative z-10">Kasus Anak</p>
             </div>
 
-            {/* Kartu 4 - Kasus Selesai */}
             <div className="card-clean hover-lift p-8 text-center relative overflow-hidden">
-              <div className="icon-container mx-auto mb-4 relative z-10">
-                <CheckCircle className="w-7 h-7 text-primary" />
-              </div>
+              <div className="icon-container mx-auto mb-4 relative z-10"><CheckCircle className="w-7 h-7 text-primary" /></div>
               <h3 className="text-2xl md:text-3xl font-bold text-heading mb-2 relative z-10">{loading ? '-' : stats.kasusSelesai}</h3>
-              <p className="text-body text-sm relative z-10">Kasus Selesai Ditangani</p>
+              <p className="text-body text-sm relative z-10">Kasus Selesai</p>
             </div>
 
-            {/* Kartu 5 - Desa Terlayani */}
             <div className="card-clean hover-lift p-8 text-center relative overflow-hidden">
-              <div className="icon-container mx-auto mb-4 relative z-10">
-                <MapPin className="w-7 h-7 text-primary" />
-              </div>
+              <div className="icon-container mx-auto mb-4 relative z-10"><MapPin className="w-7 h-7 text-primary" /></div>
               <h3 className="text-2xl md:text-3xl font-bold text-heading mb-2 relative z-10">{loading ? '-' : stats.desaTerlayani}</h3>
               <p className="text-body text-sm relative z-10">Desa Terlayani</p>
             </div>
 
-            {/* Kartu 6 - Rata-rata Waktu Penyelesaian */}
             <div className="card-clean hover-lift p-8 text-center relative overflow-hidden">
-              <div className="icon-container mx-auto mb-4 relative z-10">
-                <Zap className="w-7 h-7 text-primary" />
-              </div>
+              <div className="icon-container mx-auto mb-4 relative z-10"><Zap className="w-7 h-7 text-primary" /></div>
               <h3 className="text-2xl md:text-3xl font-bold text-heading mb-2 relative z-10">{loading ? '-' : stats.rataRataWaktu} hari</h3>
-              <p className="text-body text-sm relative z-10">Rata-rata Penyelesaian</p>
+              <p className="text-body text-sm relative z-10">Rata-rata Proses</p>
             </div>
           </div>
         </div>
@@ -295,19 +279,19 @@ export default function Home() {
 
           <div className="grid md:grid-cols-4 gap-8">
              {[
-                { icon: FileText, number: '1', title: 'Tulis Laporan', desc: 'Isi formulir pengaduan dengan lengkap' },
-                { icon: Hash, number: '2', title: 'Dapat Tiket', desc: 'Simpan kode unik untuk lacak status' },
-                { icon: Users, number: '3', title: 'Diproses', desc: 'Tim profesional kami menangani kasus' },
-                { icon: CheckCircle, number: '4', title: 'Selesai', desc: 'Kasus ditangani dengan tuntas' },
+                { icon: FileText, number: '1', title: 'Tulis Laporan', desc: 'Isi formulir pengaduan dengan lengkap dan kronologis' },
+                { icon: Hash, number: '2', title: 'Dapat Tiket', desc: 'Dapatkan kode unik tiket untuk melacak status kasus' },
+                { icon: Users, number: '3', title: 'Diproses', desc: 'Tim Satgas profesional kami akan memverifikasi dan menangani' },
+                { icon: CheckCircle, number: '4', title: 'Selesai', desc: 'Kasus ditangani hingga tuntas dengan pendampingan' },
              ].map((item, i) => (
                 <div key={i} className="relative flex flex-col">
-                  <div className="card-clean px-6 py-4 text-center hover-lift h-full">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white font-bold text-lg mx-auto mb-3">
+                  <div className="card-clean px-6 py-8 text-center hover-lift h-full border border-transparent hover:border-primary/20 transition">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white font-bold text-xl mx-auto mb-4 shadow-lg shadow-primary/30">
                       {item.number}
                     </div>
-                    <item.icon className="w-8 h-8 text-primary mx-auto mb-2" />
-                    <h3 className="text-lg font-semibold text-heading mb-2">{item.title}</h3>
-                    <p className="text-body text-sm">{item.desc}</p>
+                    <item.icon className="w-10 h-10 text-primary mx-auto mb-4 opacity-80" />
+                    <h3 className="text-xl font-bold text-heading mb-2">{item.title}</h3>
+                    <p className="text-body text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
              ))}
@@ -317,10 +301,6 @@ export default function Home() {
 
       {/* FITUR UNGGULAN */}
       <section className="py-24 px-0 relative">
-        {/* Decorative Elements */}
-        <div className="absolute top-5 right-10 w-48 h-48 rounded-full bg-primary/5 blur-3xl"></div>
-        <div className="absolute bottom-10 left-10 w-32 h-32 rounded-full bg-secondary/5 blur-2xl"></div>
-        
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-heading mb-3">Mengapa Memilih SI-APPA?</h2>

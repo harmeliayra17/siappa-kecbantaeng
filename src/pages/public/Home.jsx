@@ -160,7 +160,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center relative z-10">
           <div className="text-center md:text-left animate-fade-in-up mt-8">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-heading mb-6 leading-tight">
-              Selamat Datang di <br/>
+              <br/>
               <span className="text-primary">{webSettings.teks_sapaan}</span>
             </h1>
             <p className="gradient-text text-xl md:text-2xl font-semibold mb-6">

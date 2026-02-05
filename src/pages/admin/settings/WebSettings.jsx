@@ -86,7 +86,7 @@ export default function Settings() {
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto px-4 pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 pb-12">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Pengaturan Website</h1>
         <p className="text-gray-600 mt-2">Kelola informasi website, gambar slider, dan kontak.</p>

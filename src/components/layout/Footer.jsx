@@ -52,7 +52,7 @@ export default function Footer() {
             </div>
             {/* Dinamis: Deskripsi */}
             <p className="text-sm text-white/80 leading-relaxed">
-              {settings.home_hero_subtitle}
+              Sistem Informasi Perlindungan Perempuan dan Anak Pemberdayaan Kecamatan Bantaeng.
             </p>
             
             <div className="flex gap-3 pt-2">

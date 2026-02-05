@@ -106,7 +106,7 @@ export default function AdminSidebar() {
         <div className="p-4 border-b border-gray-800 bg-gray-800/50">
           <p className="text-sm font-semibold text-white mb-1">{profile?.nama_lengkap}</p>
           <p className="text-xs text-gray-400">
-            {isSuperAdmin() ? '👑 Kecamatan' : profile?.desa_tugas ? `📍 ${profile.desa_tugas}` : 'Admin'}
+            {isSuperAdmin() ? 'Kecamatan' : profile?.desa_tugas ? ` ${profile.desa_tugas}` : 'Admin'}
           </p>
         </div>
 

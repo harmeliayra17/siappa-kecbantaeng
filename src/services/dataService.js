@@ -1,7 +1,8 @@
 import { supabase } from './supabaseClient';
 
-// ============ LAPORAN PENGADUAN (Kasus) ============
-
+// ==========================================
+// 1. SERVICE KASUS (LAPORAN PENGADUAN)
+// ==========================================
 export const kasusService = {
   // Fetch semua kasus (untuk Kecamatan Admin)
   async getAllKasus() {
@@ -62,24 +63,31 @@ export const kasusService = {
     }
   },
 
-  // Create kasus baru (dari form lapor publik)
+  // Create kasus baru (Form Lapor)
   async createKasus(kasusData) {
     try {
-      // Generate kode tiket
       const kodeTiket = `TIKET-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+      // Mapping data agar sesuai kolom DB
+      const payload = {
+        kode_tiket: kodeTiket,
+        kategori_id: kasusData.kategori_id,
+        kronologi: kasusData.kronologi,
+        lokasi_kejadian: kasusData.lokasi_kejadian,
+        bukti_foto: kasusData.bukti_foto || null,
+        is_anonim: kasusData.is_anonim || true,
+        nama_pelapor: kasusData.is_anonim ? 'Hamba Allah' : kasusData.nama_pelapor,
+        kontak_pelapor: kasusData.kontak_pelapor,
+        status_pelapor: kasusData.status_pelapor,
+        usia: kasusData.usia ? parseInt(kasusData.usia) : null,
+        hubungan_korban: kasusData.hubungan_korban,
+        tanggal_kejadian: kasusData.tanggal_kejadian || new Date().toISOString().split('T')[0],
+        status_kasus: 'Pending'
+      };
 
       const { data, error } = await supabase
         .from('laporan_pengaduan')
-        .insert([{
-          kode_tiket: kodeTiket,
-          kategori_id: kasusData.kategori_id,
-          kronologi: kasusData.kronologi,
-          lokasi_kejadian: kasusData.lokasi_kejadian,
-          bukti_foto_url: kasusData.bukti_foto_url || null,
-          is_anonim: kasusData.is_anonim || true,
-          nama_pelapor: kasusData.is_anonim ? 'Hamba Allah' : kasusData.nama_pelapor,
-          kontak_pelapor: kasusData.kontak_pelapor,
-        }])
+        .insert([payload])
         .select()
         .single();
 
@@ -91,17 +99,25 @@ export const kasusService = {
     }
   },
 
-  // Update status & rujukan kasus (hanya admin)
+  // Update status & rujukan (Admin)
   async updateKasus(id, updates) {
     try {
+      // Mapping update agar sesuai kolom DB
+      const payload = {
+        status_kasus: updates.status_kasus, // Pastikan ini status_kasus, bukan status
+        instansi_rujukan: updates.instansi_rujukan || null,
+        catatan_admin: updates.catatan_admin,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Jika status selesai, isi tanggal_selesai
+      if (updates.status_kasus === 'Selesai') {
+        payload.tanggal_selesai = new Date().toISOString();
+      }
+
       const { data, error } = await supabase
         .from('laporan_pengaduan')
-        .update({
-          status: updates.status,
-          instansi_rujukan: updates.instansi_rujukan || null,
-          catatan_admin: updates.catatan_admin,
-          updated_at: new Date().toISOString(),
-        })
+        .update(payload)
         .eq('id', id)
         .select()
         .single();
@@ -114,7 +130,7 @@ export const kasusService = {
     }
   },
 
-  // Fetch kasus by kode tiket (untuk cek status publik)
+  // Cek Status (Masyarakat)
   async getKasusByKodeTiket(kodeTiket) {
     try {
       const { data, error } = await supabase
@@ -135,10 +151,10 @@ export const kasusService = {
   },
 };
 
-// ============ AGENDA KEGIATAN ============
-
+// ==========================================
+// 2. SERVICE AGENDA KEGIATAN
+// ==========================================
 export const agendaService = {
-  // Fetch semua agenda (publik)
   async getAllAgenda() {
     try {
       const { data, error } = await supabase
@@ -149,12 +165,10 @@ export const agendaService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error fetching all agenda:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Fetch agenda by desa (untuk Satgas)
   async getAgendaByDesa(desa) {
     try {
       const { data, error } = await supabase
@@ -166,12 +180,10 @@ export const agendaService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error fetching agenda by desa:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Fetch single agenda by ID
   async getAgendaById(id) {
     try {
       const { data, error } = await supabase
@@ -183,17 +195,26 @@ export const agendaService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error fetching agenda by ID:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Create agenda baru
-  async createAgenda(agendaData) {
+  async createAgenda(formData) {
     try {
+      const payload = {
+        judul_kegiatan: formData.judul_kegiatan,
+        jenis_agenda: formData.jenis_agenda,
+        tanggal_pelaksanaan: formData.tanggal_pelaksanaan,
+        waktu: formData.waktu,
+        lokasi: formData.lokasi,
+        deskripsi: formData.deskripsi,
+        poster_url: formData.poster_url,
+        desa_pemilik: formData.desa_pemilik
+      };
+
       const { data, error } = await supabase
         .from('agenda_kegiatan')
-        .insert([agendaData])
+        .insert([payload])
         .select()
         .single();
 
@@ -205,16 +226,26 @@ export const agendaService = {
     }
   },
 
-  // Update agenda
-  async updateAgenda(id, updates) {
-  try {
-    const { data, error } = await supabase
-      .from('agenda_kegiatan')
-      .update(updates) // Kirim updates object langsung
-      .eq('id', id)
-      .select()
-      .single();
-      
+  async updateAgenda(id, formData) {
+    try {
+      const payload = {
+        judul_kegiatan: formData.judul_kegiatan,
+        jenis_agenda: formData.jenis_agenda,
+        tanggal_pelaksanaan: formData.tanggal_pelaksanaan,
+        waktu: formData.waktu,
+        lokasi: formData.lokasi,
+        deskripsi: formData.deskripsi,
+        poster_url: formData.poster_url,
+        desa_pemilik: formData.desa_pemilik
+      };
+
+      const { data, error } = await supabase
+        .from('agenda_kegiatan')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
@@ -223,7 +254,6 @@ export const agendaService = {
     }
   },
 
-  // Delete agenda
   async deleteAgenda(id) {
     try {
       const { error } = await supabase
@@ -234,16 +264,15 @@ export const agendaService = {
       if (error) throw error;
       return { success: true };
     } catch (err) {
-      console.error('Error deleting agenda:', err);
       return { success: false, error: err.message };
     }
   },
 };
 
-// ============ KONTEN EDUKASI (YANG SUDAH DIPERBAIKI) ============
-
+// ==========================================
+// 3. SERVICE KONTEN EDUKASI
+// ==========================================
 export const edukasiService = {
-  // Fetch semua artikel (publik)
   async getAllEdukasi() {
     try {
       const { data, error } = await supabase
@@ -254,12 +283,10 @@ export const edukasiService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error fetching all edukasi:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Fetch single artikel by ID
   async getEdukasiById(id) {
     try {
       const { data, error } = await supabase
@@ -271,21 +298,17 @@ export const edukasiService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error fetching edukasi by ID:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Create artikel baru (Kecamatan only)
   async createEdukasi(formData) {
     try {
-      // ✅ SAFETY MAPPING: Pastikan nama kolom SAMA PERSIS dengan database
       const payload = {
         judul_artikel: formData.judul_artikel,
         isi_konten: formData.isi_konten,
         kategori: formData.kategori,
         gambar_thumbnail: formData.gambar_thumbnail,
-        // created_at otomatis diisi database (default now())
       };
 
       const { data, error } = await supabase
@@ -297,21 +320,17 @@ export const edukasiService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error creating edukasi:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Update artikel
   async updateEdukasi(id, formData) {
     try {
-      // ✅ SAFETY MAPPING: Kita filter ulang
       const payload = {
         judul_artikel: formData.judul_artikel,
         isi_konten: formData.isi_konten,
         kategori: formData.kategori,
         gambar_thumbnail: formData.gambar_thumbnail,
-        // Jangan update created_at saat edit
       };
 
       const { data, error } = await supabase
@@ -324,12 +343,10 @@ export const edukasiService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error updating edukasi:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Delete artikel
   async deleteEdukasi(id) {
     try {
       const { error } = await supabase
@@ -340,16 +357,15 @@ export const edukasiService = {
       if (error) throw error;
       return { success: true };
     } catch (err) {
-      console.error('Error deleting edukasi:', err);
       return { success: false, error: err.message };
     }
   },
 };
 
-// ============ MASTER DATA ============
-
+// ==========================================
+// 4. SERVICE MASTER DATA (KATEGORI)
+// ==========================================
 export const masterService = {
-  // Fetch semua kategori kasus
   async getKategoriKasus() {
     try {
       const { data, error } = await supabase
@@ -360,12 +376,10 @@ export const masterService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error fetching kategori kasus:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Fetch kategori by kelompok (Perempuan/Anak)
   async getKategoriByKelompok(kelompok) {
     try {
       const { data, error } = await supabase
@@ -377,16 +391,15 @@ export const masterService = {
       if (error) throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error fetching kategori by kelompok:', err);
       return { success: false, error: err.message };
     }
   },
 };
 
-// ============ PENGATURAN WEB ============
-
+// ==========================================
+// 5. SERVICE PENGATURAN WEB
+// ==========================================
 export const settingsService = {
-  // Fetch pengaturan web
   async getSettings() {
     try {
       const { data, error } = await supabase
@@ -395,20 +408,19 @@ export const settingsService = {
         .limit(1)
         .single();
 
+      // Kode error PGRST116 berarti data kosong (belum diisi), kita anggap sukses tp kosong
       if (error && error.code !== 'PGRST116') throw error;
       return { success: true, data };
     } catch (err) {
-      console.error('Error fetching settings:', err);
       return { success: false, error: err.message };
     }
   },
 
-  // Update pengaturan web
   async updateSettings(updates) {
     try {
       const { data, error } = await supabase
         .from('pengaturan_web')
-        .upsert(updates)
+        .upsert(updates) // Upsert: Kalau ada diupdate, kalau belum ada dibuat baru
         .select()
         .single();
 
@@ -419,79 +431,4 @@ export const settingsService = {
       return { success: false, error: err.message };
     }
   },
-
-  // Fetch home page settings
-  async getHomeSettings() {
-    try {
-      const { data, error } = await supabase
-        .from('pengaturan_web')
-        .select('home_hero_title, home_hero_subtitle, home_hero_cta_text, home_hero_image_1, home_hero_image_2, home_hero_image_3, home_stats_section_title, home_stats_section_subtitle, home_features_section_title, home_features_section_subtitle, home_process_section_title, home_process_section_subtitle')
-        .eq('id', 1)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return { success: true, data };
-    } catch (err) {
-      console.error('Error fetching home settings:', err);
-      return { success: true, data: {} }; // Return empty object jika belum ada
-    }
-  },
-
-  // Update home page settings
-  async updateHomeSettings(updates) {
-    try {
-      const { data, error } = await supabase
-        .from('pengaturan_web')
-        .upsert({
-          id: 1, // Fixed ID untuk singleton pattern
-          ...updates,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return { success: true, data };
-    } catch (err) {
-      console.error('Error updating home settings:', err);
-      return { success: false, error: err.message };
-    }
-  },
-
-  // Fetch profil page settings
-  async getProfilSettings() {
-    try {
-      const { data, error } = await supabase
-        .from('pengaturan_web')
-        .select('profil_title, profil_vision, profil_mission, profil_about_text, profil_about_image, contact_email, contact_phone, contact_address, social_media_instagram, social_media_facebook')
-        .limit(1)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return { success: true, data };
-    } catch (err) {
-      console.error('Error fetching profil settings:', err);
-      return { success: true, data: {} };
-    }
-  },
-
-  // Update profil page settings
-  async updateProfilSettings(updates) {
-    try {
-      const { data, error } = await supabase
-        .from('pengaturan_web')
-        .upsert({
-          id: 1, // Fixed ID untuk singleton pattern
-          ...updates,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return { success: true, data };
-    } catch (err) {
-      console.error('Error updating profil settings:', err);
-      return { success: false, error: err.message };
-    }
-  },
 };
-

@@ -97,26 +97,34 @@ export default function AkunSatgas() {
     try {
       setCreateLoading(true);
 
-      // A. Buat User di Auth
+      // A. Buat User di Auth dengan Metadata Lengkap
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newAccount.email,
         password: newAccount.password,
         options: {
+          // Matikan auto-login biar Admin tidak tertendang keluar
+          // (Fitur ini tergantung setting Supabase, tapi kita coba request)
+          shouldCreateUser: true, 
           data: {
             nama_lengkap: newAccount.nama_lengkap,
             role: newAccount.role,
+            desa_tugas: newAccount.desa_tugas || '',
+            no_hp: newAccount.no_hp || ''
           }
         }
       });
 
       if (authError) throw authError;
 
-      // B. Paksa Masuk ke Tabel Profiles (Upsert biar aman)
+      // B. Simpan ke Tabel Profiles (Manual Upsert)
       if (authData.user) {
+        // Kita beri jeda 1 detik agar Auth stabil dulu
+        await new Promise(r => setTimeout(r, 1000));
+
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
-            id: authData.user.id, // ID dari Auth
+            id: authData.user.id, // Pastikan ID sama dengan Auth
             email: newAccount.email,
             nama_lengkap: newAccount.nama_lengkap,
             role: newAccount.role,
@@ -125,12 +133,14 @@ export default function AkunSatgas() {
           });
 
         if (profileError) {
-           console.error("Gagal update profil:", profileError);
-           throw new Error("User dibuat tapi profil gagal disimpan.");
+           console.error("Gagal simpan profil:", profileError);
+           // Jangan throw error di sini biar user tidak panik, karena Auth sudah sukses
+           alert("User Auth berhasil dibuat, tapi Profil gagal. Coba refresh.");
+        } else {
+           alert('Akun berhasil dibuat dan siap digunakan!');
         }
       }
 
-      alert('Akun berhasil dibuat dan langsung aktif!');
       setShowCreateModal(false);
       
       // Reset Form
@@ -143,7 +153,7 @@ export default function AkunSatgas() {
         no_hp: '',
       });
 
-      // Refresh Data agar muncul di tabel
+      // Refresh Data Tabel
       fetchAccounts();
 
     } catch (err) {

@@ -309,9 +309,9 @@ export default function Home() {
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {[
-              { icon: Shield, title: 'Privasi Terjamin', desc: 'Identitas Anda dilindungi dengan keamanan tingkat tinggi', img: 'https://images.unsplash.com/photo-1633356713440-c6b53830e398?w=400&h=300&fit=crop' },
-              { icon: Zap, title: 'Respon Cepat', desc: 'Tim kami siap merespon pengaduan dalam 24 jam', img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop' },
-              { icon: Heart, title: 'Dukungan Penuh', desc: 'Konseling dan pendampingan tersedia untuk Anda', img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=300&fit=crop' },
+              { icon: Shield, title: 'Privasi Terjamin', desc: 'Identitas Anda dilindungi dengan keamanan tingkat tinggi', img: '/privacy.jpg' },
+              { icon: Zap, title: 'Respon Cepat', desc: 'Tim kami siap merespon pengaduan dalam 24 jam', img: '/respon.jpg' },
+              { icon: Heart, title: 'Dukungan Penuh', desc: 'Konseling dan pendampingan tersedia untuk Anda', img: '/support.jpg' },
             ].map((item, i) => (
               <div key={i} className="card-clean hover-lift overflow-hidden h-full">
                 <img src={item.img} alt={item.title} className="w-full h-40 object-cover" />
